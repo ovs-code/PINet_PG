@@ -17,7 +17,7 @@ class Visualizer():
         self.saved = False
         if self.display_id > 0:
             import visdom
-            self.vis = visdom.Visdom(port=opt.display_port)
+            self.vis = visdom.Visdom()
 
         if self.use_html:
             self.web_dir = os.path.join(opt.checkpoints_dir, opt.name, 'web')
@@ -101,7 +101,17 @@ class Visualizer():
         if not hasattr(self, 'plot_data'):
             self.plot_data = {'X': [], 'Y': [], 'legend': list(errors.keys())}
         self.plot_data['X'].append(epoch + counter_ratio)
-        self.plot_data['Y'].append([errors[k] for k in self.plot_data['legend']])
+        # can't send lists of PyTorch tensors to visdom
+        newY = []
+        for k in self.plot_data['legend']:
+            value = errors[k]
+            try:
+                value = value.item()
+            except:
+                pass
+            newY.append(value)
+        self.plot_data['Y'].append(newY)
+
         self.vis.line(
             X=np.stack([np.array(self.plot_data['X'])] * len(self.plot_data['legend']), 1),
             Y=np.array(self.plot_data['Y']),
