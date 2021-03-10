@@ -196,19 +196,9 @@ class L1_plus_perceptualLoss(nn.Module):
             return Variable(torch.zeros(1)).cuda(), Variable(torch.zeros(1)), Variable(torch.zeros(1))
         # normal L1
         loss_l1 = F.l1_loss(inputs, targets) * self.lambda_L1
-        mean = torch.FloatTensor(3)
-        mean[0] = 0.485
-        mean[1] = 0.456
-        mean[2] = 0.406
-        mean = Variable(mean)
-        mean = mean.resize(1, 3, 1, 1).cuda()
 
-        std = torch.FloatTensor(3)
-        std[0] = 0.229
-        std[1] = 0.224
-        std[2] = 0.225
-        std = Variable(std)
-        std = std.resize(1, 3, 1, 1).cuda()
+        mean = torch.FloatTensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1).cuda()
+        std = torch.FloatTensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1).cuda()
 
         fake_p2_norm = (inputs + 1)/2 # [-1, 1] => [0, 1]
         fake_p2_norm = (fake_p2_norm - mean)/std
