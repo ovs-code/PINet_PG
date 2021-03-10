@@ -30,7 +30,7 @@ print(len(dataset))
 model = model.eval()
 print(model.training)
 
-opt.how_many = 999999
+# opt.how_many = 999999
 fps = 0
 num = 0
 # test
