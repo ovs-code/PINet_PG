@@ -324,7 +324,7 @@ class TransferModel(nn.Module):
         vis[:, width*2:width*3, :] = input_SPL1
         vis[:, width*3:width*4, :] = input_KP2
         vis[:, width*4:width*5, :] = fake_shape2
-        vis[:, width*6:, :] = fake_p2
+        vis[:, width*5:, :] = fake_p2
 
         ret_visuals = OrderedDict([('vis', vis)])
 
