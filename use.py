@@ -13,7 +13,7 @@ opt.batchSize = 1  # test code only supports batchSize = 1
 opt.serial_batches = True  # no shuffle
 opt.no_flip = True  # no flip
 
-
+# TODO: add DataLoader for using the model without ground truth
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
 model = create_model(opt)
@@ -45,7 +45,7 @@ for i, data in enumerate(dataset):
     fps += endTime-startTime
     num += 1
     print(endTime-startTime)
-    visuals = model.get_current_visuals()
+    visuals = model.get_reduced_visuals()
     img_path = model.get_image_paths()
     img_path = [img_path]
     print(img_path)

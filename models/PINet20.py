@@ -60,7 +60,7 @@ class TransferModel(nn.Module):
         self.input_syn_set = self.Tensor(nb, opt.P_input_nc, size, size)
 
         input_nc = [opt.P_input_nc, opt.BP_input_nc+opt.BP_input_nc, opt.P_input_nc]
-        self.netG = networks.define_G(input_nc, 
+        self.netG = networks.define_G(input_nc,
                                         opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, opt.init_type, self.gpu_ids)
 
 
@@ -139,7 +139,7 @@ class TransferModel(nn.Module):
         input_P1, input_KP1, input_SPL1 = input['P1'], input['KP1'], input['SPL1']
         input_P2, input_KP2, input_SPL2 = input['P2'], input['KP2'], input['SPL2']
 
- 
+
         input_SPL1_onehot = input['SPL1_onehot']
         input_SPL2_onehot = input['SPL2_onehot']
         self.input_SPL1_onehot_set.resize_(input_SPL1_onehot.size()).copy_(input_SPL1_onehot)
@@ -148,7 +148,7 @@ class TransferModel(nn.Module):
         self.input_SPL1_set.resize_(input_SPL1.size()).copy_(input_SPL1)
         self.input_SPL2_set.resize_(input_SPL2.size()).copy_(input_SPL2)
 
-        
+
         #qinput_syn = input_syn[:,:,:,40:216]
 
 
@@ -173,9 +173,9 @@ class TransferModel(nn.Module):
         self.input_SPL1_onehot = Variable(self.input_SPL1_onehot_set)
         self.input_SPL2_onehot = Variable(self.input_SPL2_onehot_set)
 
-        
+
         G_input = [self.input_P1,
-                   torch.cat((self.input_KP1, self.input_KP2), 1), 
+                   torch.cat((self.input_KP1, self.input_KP2), 1),
                   self.input_SPL1_onehot, self.input_SPL2_onehot]
         self.fake_p2, self.fake_parse = self.netG(G_input)
 
@@ -193,7 +193,7 @@ class TransferModel(nn.Module):
         self.input_SPL2_onehot = Variable(self.input_SPL2_onehot_set)
 
         G_input = [self.input_P1,
-                   torch.cat((self.input_KP1, self.input_KP2), 1), 
+                   torch.cat((self.input_KP1, self.input_KP2), 1),
                    self.input_SPL1_onehot, self.input_SPL2_onehot]
         self.fake_p2, self.fake_parse = self.netG(G_input)
 
@@ -226,7 +226,7 @@ class TransferModel(nn.Module):
 
 
     def backward_G(self):
-       
+
         mask = self.input_SPL2.squeeze(1).long()
         self.maskloss1 = self.parseLoss(self.fake_parse, mask)
 
@@ -250,7 +250,7 @@ class TransferModel(nn.Module):
         self.backward_D()
         self.optimizer_D_PB.step()
         self.optimizer_D_PP.step()
-       
+
         self.optimizer_G.zero_grad()
         self.backward_G()
         self.optimizer_G.step()
@@ -276,7 +276,7 @@ class TransferModel(nn.Module):
         height, width = self.input_P1.size(2), self.input_P1.size(3)
         input_P1 = util.tensor2im(self.input_P1.data)
         input_P2 = util.tensor2im(self.input_P2.data)
-        
+
         input_SPL1 = util.tensor2im(torch.argmax(self.input_SPL1_onehot, axis=1, keepdim=True).data, True)
         input_SPL2 = util.tensor2im(torch.argmax(self.input_SPL2_onehot, axis=1, keepdim=True).data, True)
 
@@ -299,6 +299,32 @@ class TransferModel(nn.Module):
         vis[:, width*5:width*6, :] = input_SPL2
         vis[:, width*6:width*7, :] = fake_shape2
         vis[:, width*7:, :] = fake_p2
+
+        ret_visuals = OrderedDict([('vis', vis)])
+
+        return ret_visuals
+
+    def get_reduced_visuals(self):
+        height, width = self.input_P1.size(2), self.input_P1.size(3)
+        input_P1 = util.tensor2im(self.input_P1.data)
+        # input_P2 = util.tensor2im(self.input_P2.data)
+
+        input_SPL1 = util.tensor2im(torch.argmax(self.input_SPL1_onehot, axis=1, keepdim=True).data, True)
+        # input_SPL2 = util.tensor2im(torch.argmax(self.input_SPL2_onehot, axis=1, keepdim=True).data, True)
+
+        input_KP1 = util.draw_pose_from_map(self.input_KP1.data)[0]
+        input_KP2 = util.draw_pose_from_map(self.input_KP2.data)[0]
+
+        fake_shape2 = util.tensor2im(torch.argmax(self.fake_parse, axis=1,keepdim=True).data, True)
+        fake_p2 = util.tensor2im(self.fake_p2.data)
+
+        vis = np.zeros((height, width*6, 3)).astype(np.uint8) #h, w, c
+        vis[:, :width, :] = input_P1
+        vis[:, width:width*2, :] = input_KP1
+        vis[:, width*2:width*3, :] = input_SPL1
+        vis[:, width*3:width*4, :] = input_KP2
+        vis[:, width*4:width*5, :] = fake_shape2
+        vis[:, width*6:, :] = fake_p2
 
         ret_visuals = OrderedDict([('vis', vis)])
 
