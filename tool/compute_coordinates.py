@@ -221,8 +221,8 @@ def get_coords(oriImg, model):
 
 if __name__ == '__main__':
     # most important parameters
-    input_folder = './results/images_crop/'
-    output_path = './results/pckh.csv'
+    input_folder = './test_data/test/'
+    output_path = './test_data/test-annotation-test.csv'
 
     args = args()
 
