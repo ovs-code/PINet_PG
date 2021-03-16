@@ -7,6 +7,7 @@ from keras.models import load_model
 
 from models.PINet20 import TransferModel, create_model
 from tool import cords_to_map, get_coords
+from util import util
 
 IMAGE_SIZE = (256, 176)
 
@@ -71,6 +72,7 @@ if __name__ == '__main__':
     SOURCE_IMAGE_PATH = 'test_data/test/randomphoto_small.jpg'
     TEST_SEG_PATH = 'test_data/testSPL2/randomphoto_small.png'
     TARGET_POSE_PATH = 'test_data/test/Oskar_pad_small.jpg.npy'
+    OUPUT_PATH = 'test_data/out.jpg'
 
     opt = InferOptions().parse()
     pinet = create_model(opt)
@@ -82,3 +84,5 @@ if __name__ == '__main__':
     target_pose = load_pose_from_file(TARGET_POSE_PATH)
 
     output_image, output_segmentation = pipeline(source_image, target_pose)
+
+    Image.fromarray(util.tensor2im(output_image)).save(OUPUT_PATH)
