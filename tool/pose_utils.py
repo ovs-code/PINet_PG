@@ -1,15 +1,14 @@
-import numpy as np
-from scipy.ndimage.filters import gaussian_filter
-from skimage.draw import circle, line_aa, polygon
 import json
 
 import matplotlib
+import numpy as np
+from skimage.draw import circle, line_aa, polygon
+
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+
 import matplotlib.patches as mpatches
-from collections import defaultdict
-import skimage.measure, skimage.transform
-import sys
+import matplotlib.pyplot as plt
+import torch
 
 LIMB_SEQ = [[1,2], [1,5], [2,3], [3,4], [5,6], [6,7], [1,8], [8,9],
            [9,10], [1,11], [11,12], [12,13], [1,0], [0,14], [14,16],
@@ -142,11 +141,24 @@ def produce_ma_mask(kp_array, img_size, point_radius=4):
     mask = erosion(mask, square(5))
     return mask
 
+def reorder_pose(pose_map: np.ndarray) -> torch.Tensor:
+    """Generate a pose batch from a single pose map"""
+    pose = torch.from_numpy(pose_map).float()  # h, w, c
+    pose = pose.transpose(2, 0)  # c,w,h
+    pose = pose.transpose(2, 1)  # c,h,w
+    return pose.unsqueeze(0)
+
+def load_pose_from_file(path):
+    """Load a pose map from a numpy file at path."""
+    pose_img = np.load(path)
+    return reorder_pose(pose_img)
+
 if __name__ == "__main__":
-    import pandas as pd
-    from skimage.io import imread
-    import pylab as plt
     import os
+
+    import pandas as pd
+    import pylab as plt
+    from skimage.io import imread
     i = 5
     df = pd.read_csv('data/market-annotation-train.csv', sep=':')
 
