@@ -1,4 +1,3 @@
-import pose_utils
 import os
 import numpy as np
 
@@ -10,7 +9,7 @@ from skimage.io import imread
 from skimage.transform import resize
 from scipy.ndimage import gaussian_filter
 
-from cmd_args import args
+from .cmd_args import args
 
 
 mapIdx = [[31, 32], [39, 40], [33, 34], [35, 36], [41, 42], [43, 44], [19, 20], [21, 22],
