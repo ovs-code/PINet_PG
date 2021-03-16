@@ -25,7 +25,7 @@ boxsize = 368
 scale_search = [1]
 
 
-def compute_cordinates(heatmap_avg, paf_avg, th1=0.1, th2=0.05):
+def compute_cordinates(oriImg, heatmap_avg, paf_avg, th1=0.1, th2=0.05):
     all_peaks = []
     peak_counter = 0
 
@@ -213,7 +213,7 @@ def get_coords(oriImg, model):
 
     heatmap_avg /= len(multiplier)
 
-    pose_cords = compute_cordinates(heatmap_avg, paf_avg)
+    pose_cords = compute_cordinates(oriImg, heatmap_avg, paf_avg)
 
     return pose_cords
 

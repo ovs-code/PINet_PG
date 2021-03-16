@@ -1,4 +1,5 @@
 import argparse
+import torch
 
 class InferOptions():
     def __init__(self):
@@ -30,6 +31,10 @@ class InferOptions():
         self.parser.add_argument('--D_n_downsampling', type=int, default=2, help='down-sampling blocks for discriminator')
 
         self.parser.add_argument('--dataset_mode', type=str, default='keypoint', help='chooses how datasets are loaded. [unaligned | aligned | single | keypoint]')
+        self.parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
+        self.parser.add_argument('--fineSize', type=int, default=256, help='then crop to this size')
+        
+        self.parser.add_argument('--which_epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
 
         # interesting arguments
         self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
@@ -46,7 +51,7 @@ class InferOptions():
             self.initialize()
         self.opt = self.parser.parse_args()
         self.opt.model = 'PInet'
-        self.opt.isTrain = self.isTrain   # train or test
+        self.opt.isTrain = False
 
         str_ids = self.opt.gpu_ids.split(',')
         self.opt.gpu_ids = []
@@ -58,3 +63,4 @@ class InferOptions():
         # set gpu ids
         if len(self.opt.gpu_ids) > 0:
             torch.cuda.set_device(self.opt.gpu_ids[0])
+        return self.opt
