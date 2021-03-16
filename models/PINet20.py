@@ -198,6 +198,17 @@ class TransferModel(nn.Module):
         self.fake_p2, self.fake_parse = self.netG(G_input)
 
 
+    def infer(self, source_image, source_pose, target_pose, source_segmentation_onehot):
+        G_input = [
+            source_image,
+            torch.cat((source_pose, target_pose), 1),
+            source_segmentation_onehot,
+            None # target segmentation
+        ]
+        fake_image, fake_segmentation = self.netG(G_input)
+        return fake_image, fake_segmentation
+
+
     # get image paths
     def get_image_paths(self):
         return self.image_paths
