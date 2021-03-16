@@ -186,6 +186,7 @@ def compute_cordinates(oriImg, heatmap_avg, paf_avg, th1=0.1, th2=0.05):
 
 
 def get_coords(oriImg, model):
+    """Use the pose estimating model to get a list of 18 keypoints for an input image."""
     orig_shape = oriImg.shape
     # manually resizing the images to get the script running
     oriImg = st.resize(oriImg, (256, 256), preserve_range=True, order=1)

@@ -149,6 +149,7 @@ def reorder_pose(pose_map: np.ndarray) -> torch.Tensor:
     return pose.unsqueeze(0)
 
 def load_pose_from_file(path):
+    """Load a pose map from a numpy file at path."""
     pose_img = np.load(path)
     return reorder_pose(pose_img)
 

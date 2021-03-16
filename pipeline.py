@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import torch
 from keras.models import load_model
@@ -14,6 +16,7 @@ IMAGE_SIZE = (256, 176)
 
 class InferencePipeline:
     def __init__(self, pose_estimator, pinet: TransferModel, segmentator, opt):
+        """Initialize the pipeline with already loaded models."""
         self.pose_estimator = pose_estimator
         self.pinet = pinet
         self.segmentator = segmentator
@@ -24,7 +27,8 @@ class InferencePipeline:
         ])
 
     @classmethod
-    def from_opts(cls, opt):
+    def from_opts(cls, opt) -> InferencePipeline:
+        """Load all trained models required from the locations indicated in opt."""
         TEST_SEG_PATH = 'test_data/testSPL2/randomphoto_small.png'
 
         pinet = create_model(opt)

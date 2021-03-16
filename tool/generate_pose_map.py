@@ -15,6 +15,7 @@ def load_pose_cords_from_strings(y_str, x_str):
 
 
 def cords_to_map(cords, img_size, sigma=6):
+    """Convert a list of keypoint locations to 18 different heatmaps for each keypoint."""
     result = np.zeros(img_size + cords.shape[0:1], dtype='uint8')
     for i, point in enumerate(cords):
         if point[0] == MISSING_VALUE or point[1] == MISSING_VALUE:
