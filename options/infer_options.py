@@ -8,16 +8,10 @@ class InferOptions():
 
     def initialize(self):
         # configure model
-        self.parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels')
-        self.parser.add_argument('--output_nc', type=int, default=3, help='# of output image channels')
         self.parser.add_argument('--ngf', type=int, default=64, help='# of gen filters in first conv layer')
-        self.parser.add_argument('--ndf', type=int, default=64, help='# of discrim filters in first conv layer')
-        self.parser.add_argument('--which_model_netD', type=str, default='resnet', help='selects model to use for netD')
         self.parser.add_argument('--which_model_netG', type=str, default='PInet', help='selects model to use for netG')
-        self.parser.add_argument('--n_layers_D', type=int, default=3, help='blocks used in D')
         self.parser.add_argument('--norm', type=str, default='instance', help='instance normalization or batch normalization')
         self.parser.add_argument('--no_dropout', action='store_true', help='no dropout for the generator')
-        self.parser.add_argument('--padding_type', type=str, default='reflect', help='# of input image channels')
 
         self.parser.add_argument('--init_type', type=str, default='kaiming', help='network initialization [normal|xavier|kaiming|orthogonal]')
 
