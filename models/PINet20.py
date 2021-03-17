@@ -191,7 +191,6 @@ class TransferModel(nn.Module):
 
         self.input_SPL1_onehot = Variable(self.input_SPL1_onehot_set)
         self.input_SPL2_onehot = Variable(self.input_SPL2_onehot_set)
-        print(self.input_KP1.shape, self.input_KP2.shape)
         G_input = [self.input_P1,
                    torch.cat((self.input_KP1, self.input_KP2), 1),
                    self.input_SPL1_onehot, self.input_SPL2_onehot]
