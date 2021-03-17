@@ -203,7 +203,7 @@ def get_coords(oriImg, model):
         imageToTest = resize(oriImg, new_size, order=3, preserve_range=True)
         imageToTest_padded = imageToTest[np.newaxis, :, :, :]/255 - 0.5
 
-        output1, output2 = model.predict(imageToTest_padded)
+        output1, output2 = model(imageToTest_padded, training=False)
 
         heatmap = st.resize(output2[0], orig_shape[:2],
                             preserve_range=True, order=1)
