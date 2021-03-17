@@ -31,7 +31,7 @@ class InferencePipeline:
         """Load all trained models required from the locations indicated in opt."""
         TEST_SEG_PATH = 'test_data/testSPL2/randomphoto_small.png'
 
-        pinet = create_model(opt)
+        pinet = create_model(opt).eval()
         pose_estimator = load_model(opt.pose_estimator, compile=False)
         segmentator = DummySegmentationModel(TEST_SEG_PATH)
         return cls(pose_estimator, pinet, segmentator, opt)
@@ -71,6 +71,8 @@ class DummySegmentationModel:
         num_class = 12
         SPL_path = self.path
         SPL_img = Image.open(SPL_path)
+        if np.array(SPL_img).shape[1]==256:
+            SPL_img = SPL_img.crop((40, 0, 216, 256))
         SPL_img = SPL_img.transpose(Image.FLIP_LEFT_RIGHT)
         SPL_img = np.expand_dims(np.array(SPL_img), 0)
         _, h, w = SPL_img.shape
