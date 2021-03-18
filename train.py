@@ -27,8 +27,7 @@ for epoch in range(opt.epoch_count, opt.sepiter + opt.niter + opt.niter_decay + 
         model.set_input(data)
 
         if epoch < opt.sepiter:
-            model.optimize_parsing_parameters()
-            model.optimize_image_parameters()
+            model.optimize_parameters_seperate()
         else:
             model.optimize_parameters()
 
