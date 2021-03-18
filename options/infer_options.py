@@ -27,7 +27,7 @@ class InferOptions():
         self.parser.add_argument('--dataset_mode', type=str, default='keypoint', help='chooses how datasets are loaded. [unaligned | aligned | single | keypoint]')
         self.parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
         self.parser.add_argument('--fineSize', type=int, default=256, help='then crop to this size')
-        
+
         self.parser.add_argument('--which_epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
 
         # interesting arguments
