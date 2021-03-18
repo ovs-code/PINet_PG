@@ -14,6 +14,7 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--epoch_count', type=int, default=1, help='the starting epoch count, we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>, ...')
         self.parser.add_argument('--phase', type=str, default='train', help='train, val, test, etc')
         self.parser.add_argument('--which_epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
+        self.parser.add_argument('--sepiter', type=int, default=100, help='# of iter training both generators seperately')
         self.parser.add_argument('--niter', type=int, default=100, help='# of iter at starting learning rate')
         self.parser.add_argument('--niter_decay', type=int, default=100, help='# of iter to linearly decay learning rate to zero')
         self.parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')
@@ -43,6 +44,6 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--hmr_model', type=str, default='assets/pretrains/hmr_tf2pt.pth',
                                   help='pretrained hmr model path.')
         self.parser.add_argument('--smpl_model', type=str, default='assets/pretrains/smpl_model.pkl',
-                                  help='pretrained smpl model path.')        
+                                  help='pretrained smpl model path.')
 
         self.isTrain = True
