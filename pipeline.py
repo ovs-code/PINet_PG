@@ -10,6 +10,7 @@ from PIL import Image
 from torchvision import transforms, io
 from torchvision.io import video
 
+from util import util
 from models.PINet20 import TransferModel, create_model
 import models.parsing 
 from options.infer_options import InferOptions
