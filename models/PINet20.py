@@ -300,9 +300,9 @@ class TransferModel(nn.Module):
 
         self.L1 = L1_per[1]
         self.per = L1_per[2]
-        self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2
+        self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2 * self.opt.lambda_GAN
 
-        self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN * self.opt.lambda_GAN+ self.maskloss1
+        self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN + self.maskloss1
         self.loss_mask.backward()
 
     # def backward_seperate_G(self):
@@ -333,9 +333,9 @@ class TransferModel(nn.Module):
 
         self.L1 = L1_per[1]
         self.per = L1_per[2]
-        self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2
+        self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2  * self.opt.lambda_GAN
 
-        self.loss_mask = self.loss_G_L1 + self.loss_G_GAN * self.opt.lambda_GAN
+        self.loss_mask = self.loss_G_L1 + self.loss_G_GAN
         self.loss_mask.backward()
 
     def optimize_parameters(self):
