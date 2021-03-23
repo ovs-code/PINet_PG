@@ -188,26 +188,6 @@ class TransferModel(nn.Module):
                   self.input_SPL1_onehot, self.input_SPL2_onehot]
         self.fake_p2, self.fake_parse = self.netG(G_input)
 
-    # def forward_seperate(self):
-    #     self.input_P1 = Variable(self.input_P1_set)
-    #     self.input_P2 = Variable(self.input_P2_set)
-    #     self.input_KP1 = Variable(self.input_KP1_set)
-    #     self.input_KP2 = Variable(self.input_KP2_set)
-    #     self.input_SPL1 = Variable(self.input_SPL1_set)
-    #     self.input_SPL2 = Variable(self.input_SPL2_set)
-    #     self.input_SPL1_onehot = Variable(self.input_SPL1_onehot_set)
-    #     self.input_SPL2_onehot = Variable(self.input_SPL2_onehot_set)
-    #     parse_input = torch.cat((
-    #         self.input_P1,
-    #         self.input_SPL1_onehot,
-    #         torch.cat((self.input_KP1, self.input_KP2), 1)
-    #     ), 1)
-    #     self.fake_parse = self.netG.model.ParsingNet(parse_input)
-    #     G_input = [self.input_P1,
-    #                torch.cat((self.input_KP1, self.input_KP2), 1),
-    #               self.input_SPL1_onehot, self.input_SPL2_onehot]
-    #     self.fake_p2 = self.netG.model.forward_image(G_input)
-
     def prepare_forward(self):
         self.input_P1 = Variable(self.input_P1_set)
         self.input_KP1 = Variable(self.input_KP1_set)
@@ -301,24 +281,15 @@ class TransferModel(nn.Module):
         self.L1 = L1_per[1]
         self.per = L1_per[2]
         self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2 * self.opt.lambda_GAN
+        if self.opt.cycle_gan:
+            G_input = [self.input_P1,
+                   torch.cat((self.input_KP1, self.input_KP2), 1),
+                  self.input_SPL1_onehot, self.input_SPL2_onehot]
+            fake_orig = self.netG.model.forward_image(G_input)
+            self.loss_cycle = self.criterionL1(fake_orig, self.input_P1)[0] * self.opt.lambda_cycle
 
-        self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN + self.maskloss1
+        self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN + self.maskloss1 + self.loss_cycle
         self.loss_mask.backward()
-
-    # def backward_seperate_G(self):
-    #     mask = self.input_SPL2.squeeze(1).long()
-    #     self.maskloss1 = self.parseLoss(self.fake_parse, mask)
-    #     L1_per = self.criterionL1(self.fake_p2, self.input_P2)
-    #     self.loss_G_L1 = L1_per[0]
-    #     pred_fake = self.netD_PB(torch.cat((self.input_KP2, self.fake_p2),1))
-    #     pred_fake_pp = self.netD_PP(torch.cat((self.fake_p2,self.input_P1),1))
-
-    #     self.L1 = L1_per[1]
-    #     self.per = L1_per[2]
-    #     self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2
-
-    #     self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN * self.opt.lambda_GAN + self.maskloss1
-    #     self.loss_mask.backward()
 
     def backward_parsing_G(self):
         mask = self.input_SPL2.squeeze(1).long()
@@ -334,8 +305,14 @@ class TransferModel(nn.Module):
         self.L1 = L1_per[1]
         self.per = L1_per[2]
         self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2  * self.opt.lambda_GAN
+        if self.opt.cycle_gan:
+            G_input = [self.input_P1,
+                   torch.cat((self.input_KP1, self.input_KP2), 1),
+                  self.input_SPL1_onehot, self.input_SPL2_onehot]
+            fake_orig = self.netG.model.forward_image(G_input)
+            self.loss_cycle = self.criterionL1(fake_orig, self.input_P1)[0] * self.opt.lambda_cycle
 
-        self.loss_mask = self.loss_G_L1 + self.loss_G_GAN
+        self.loss_mask = self.loss_G_L1 + self.loss_G_GAN + self.loss_cycle
         self.loss_mask.backward()
 
     def optimize_parameters(self):
@@ -380,6 +357,7 @@ class TransferModel(nn.Module):
             ret_errors['PP'] = self.loss_DPP_fake
             ret_errors['pair_GANloss'] = self.loss_G_GAN.data.item()
             ret_errors['parsing1'] = self.maskloss1.data.item()
+            ret_errors['cycle_loss'] = self.loss_cycle.data.item()
 
 
 

@@ -20,9 +20,12 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--beta1', type=float, default=0.5, help='momentum term of adam')
         self.parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate for adam')
         self.parser.add_argument('--no_lsgan', action='store_true', help='do *not* use least square GAN, if false, use vanilla GAN')
+        self.parser.add_argument('--cycle_gan', action='store_true', help='use an additional cycle consistency loss term')
         self.parser.add_argument('--lambda_A', type=float, default=1.0, help='weight for L1 loss')
         self.parser.add_argument('--lambda_B', type=float, default=1.0, help='weight for perceptual L1 loss')
         self.parser.add_argument('--lambda_GAN', type=float, default=5.0, help='weight of GAN loss')
+        self.parser.add_argument('--lambda_cycle', type=float, default=1.0, help='weight of cycle consistency loss')
+
 
         self.parser.add_argument('--pool_size', type=int, default=50, help='the size of image buffer that stores previously generated images')
         self.parser.add_argument('--no_html', action='store_true', help='do not save intermediate training results to [opt.checkpoints_dir]/[opt.name]/web/')
