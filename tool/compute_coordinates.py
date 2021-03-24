@@ -54,11 +54,10 @@ class PoseEstimator:
                 batch = batch.cuda()
             output = self.model(batch).detach().cpu().numpy()
             preds, maxvals = get_final_preds(output)
-            points = preds * SCALE_FACTOR
-            invalid = (points[:, 0] >= width) | (
-                points[:, 1] >= height) | (maxvals[0, :, 0] < TRESHOLD)
+            points = preds[0] * SCALE_FACTOR
+            invalid = (points[:, 0] >= width) | (points[:, 1] >= height) | (maxvals[0, :, 0] < TRESHOLD)
             points[invalid] = -1
-            return points
+            return points.astype(int)
 
 
 if __name__ == '__main__':
