@@ -4,7 +4,7 @@ from typing import Tuple
 
 import pkg_resources
 import torch
-import tqdm
+from tqdm import tqdm
 from hrnet_pose import models
 from hrnet_pose.config import cfg, update_config
 from hrnet_pose.core.inference import get_final_preds
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     # most important parameters
     input_folder = './test_data/test/'
     output_path = './test_data/test-annotation-test.csv'
-    pose_estimator = './assets/pretrains/pose_hrnet_w48_384x288.pth'
+    pose_estimator = 'assets/pretrains/pose_hrnet_w48_384x288.pth'
 
     args = Namespace(
         cfg=pkg_resources.resource_filename(
