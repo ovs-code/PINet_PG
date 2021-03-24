@@ -1,8 +1,8 @@
 import os
-from .inception_score import get_inception_score
+# from inception_score import get_inception_score
 
 from skimage.io import imread, imsave
-from skimage.measure import compare_ssim
+from skimage.metrics import structural_similarity as compare_ssim
 
 import numpy as np
 import pandas as pd
@@ -93,9 +93,9 @@ def test(generated_images_dir, annotations_file_test):
 
     input_images, target_images, generated_images, names = load_generated_images(generated_images_dir)
 
-    print ("Compute inception score...")
-    inception_score = get_inception_score(generated_images)
-    print ("Inception score %s" % inception_score[0])
+    #print ("Compute inception score...")
+    #inception_score = get_inception_score(generated_images)
+    #print ("Inception score %s" % inception_score[0])
 
     print ("Compute structured similarity score (SSIM)...")
     structured_score = ssim_score(generated_images, target_images)
@@ -106,7 +106,7 @@ def test(generated_images_dir, annotations_file_test):
 
 if __name__ == "__main__":
     # fix these paths
-    generated_images_dir = 'results/fashion_PATN/test_latest/images'
+    generated_images_dir = 'results/fashion_PInet_PG/test_latest/images'
     annotations_file_test = 'fashion_data/fasion-resize-annotation-test.csv'
 
     test(generated_images_dir, annotations_file_test)

@@ -109,6 +109,8 @@ class TransferModel(nn.Module):
                 self.criterionL1 = L1_plus_perceptualLoss(opt.lambda_A, opt.lambda_B, opt.perceptual_layers, self.gpu_ids, opt.percep_is_l1)
             else:
                 raise Excption('Unsurportted type of L1!')
+            self.criterion_cycle = torch.nn.L1Loss()
+            self.loss_cycle = torch.tensor(0)
             # initialize optimizers
             opt_args = dict(lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), **opt_args)
@@ -282,11 +284,11 @@ class TransferModel(nn.Module):
         self.per = L1_per[2]
         self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2 * self.opt.lambda_GAN
         if self.opt.cycle_gan:
-            G_input = [self.input_P1,
-                   torch.cat((self.input_KP1, self.input_KP2), 1),
-                  self.input_SPL1_onehot, self.input_SPL2_onehot]
-            fake_orig = self.netG.model.forward_image(G_input)
-            self.loss_cycle = self.criterionL1(fake_orig, self.input_P1)[0] * self.opt.lambda_cycle
+            G_input = [self.fake_p2,
+                   torch.cat((self.input_KP2, self.input_KP1), 1),
+                   self.input_SPL2_onehot, self.input_SPL1_onehot]
+            fake_P1, _ = self.netG(G_input)
+            self.loss_cycle = self.criterion_cycle(fake_P1, self.input_P1) * self.opt.lambda_cycle
 
         self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN + self.maskloss1 + self.loss_cycle
         self.loss_mask.backward()
@@ -305,12 +307,6 @@ class TransferModel(nn.Module):
         self.L1 = L1_per[1]
         self.per = L1_per[2]
         self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2  * self.opt.lambda_GAN
-        if self.opt.cycle_gan:
-            G_input = [self.input_P1,
-                   torch.cat((self.input_KP1, self.input_KP2), 1),
-                  self.input_SPL1_onehot, self.input_SPL2_onehot]
-            fake_orig = self.netG.model.forward_image(G_input)
-            self.loss_cycle = self.criterionL1(fake_orig, self.input_P1)[0] * self.opt.lambda_cycle
 
         self.loss_mask = self.loss_G_L1 + self.loss_G_GAN + self.loss_cycle
         self.loss_mask.backward()

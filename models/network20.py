@@ -278,7 +278,6 @@ class Gated_conv(nn.Module):
         res = x
         x = self.gated_conv(x)
         mask = self.mask_conv(res)
-
         if self.activation is not None:
             x = self.activation(x) * self.sigmoid(mask)
         else:

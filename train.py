@@ -4,6 +4,7 @@ from data.data_loader import CreateDataLoader
 from models.PINet20 import create_model
 from util.visualizer import Visualizer
 
+
 opt = TrainOptions().parse()
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
@@ -26,7 +27,7 @@ for epoch in range(opt.epoch_count, opt.sepiter + opt.niter + opt.niter_decay + 
         epoch_iter += opt.batchSize
         model.set_input(data)
 
-        if epoch < opt.sepiter:
+        if epoch <= opt.sepiter:
             model.optimize_parameters_seperate()
         else:
             model.optimize_parameters()

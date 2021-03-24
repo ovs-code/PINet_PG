@@ -6,3 +6,12 @@ __pycache__
 /checkpoints/
 .ipynb_checkpoints/
 /test_data/
+*.code-workspace
+/venv
+
+# Flask ignores
+instance/
+.webassets-cache
+.env
+imgs/
+node_modules/
