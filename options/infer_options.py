@@ -16,7 +16,7 @@ class InferOptions():
         self.parser.add_argument('--init_type', type=str, default='kaiming', help='network initialization [normal|xavier|kaiming|orthogonal]')
 
         self.parser.add_argument('--P_input_nc', type=int, default=3, help='# of input image channels')
-        self.parser.add_argument('--BP_input_nc', type=int, default=18, help='# of input image channels')
+        self.parser.add_argument('--BP_input_nc', type=int, default=17, help='# of input image channels')
 
         self.parser.add_argument('--with_D_PP', type=int, default=1, help='use D to judge P and P is pair or not')
         self.parser.add_argument('--with_D_PB', type=int, default=1, help='use D to judge P and B is pair or not')
@@ -27,7 +27,7 @@ class InferOptions():
         self.parser.add_argument('--dataset_mode', type=str, default='keypoint', help='chooses how datasets are loaded. [unaligned | aligned | single | keypoint]')
         self.parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
         self.parser.add_argument('--fineSize', type=int, default=256, help='then crop to this size')
-        
+
         self.parser.add_argument('--which_epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
 
         # interesting arguments

@@ -67,7 +67,7 @@ class TransferModel(nn.Module):
         if self.isTrain:
             use_sigmoid = opt.no_lsgan
             if opt.with_D_PB:
-                self.netD_PB = networks.define_D(3+18, opt.ndf,
+                self.netD_PB = networks.define_D(3+17, opt.ndf,
                                             opt.which_model_netD,
                                             opt.n_layers_D, 'instance', use_sigmoid, opt.init_type, self.gpu_ids,
                                             not opt.no_dropout_D,

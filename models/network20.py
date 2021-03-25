@@ -293,7 +293,7 @@ class Gated_deconv(nn.Module):
         groups=1, bias=True,batch_norm=True, activation=torch.nn.LeakyReLU(0.2, inplace=True)):
         super(Gated_deconv, self).__init__()
         self.conv2d = Gated_conv(in_dim, out_dim, kernel_size, stride, padding, dilation, groups, bias, batch_norm, activation)
-        
+
     def forward(self, x):
         x = F.upsample(x, scale_factor=2)
         return self.conv2d(x)
@@ -336,7 +336,7 @@ class GCNet(torch.nn.Module):
             Gated_conv(ngf//2, out_dim, 3, 1, padding=get_pad(128,3,1), activation=None)
             )
 
-        
+
 
     def forward(self, input):
         x = self.gcnet(input)
@@ -385,12 +385,12 @@ class PINet(nn.Module):
 
     def forward(self, input):
         x1, x2, x3, x4 = input
-        p1, p2 = x2.split(18, dim=1)
+        p1, p2 = x2.split(17, dim=1)
         parse_input = torch.cat((x1, x3, x2), 1)
         parse = self.ParsingNet(parse_input)
         parse1 = parse.detach()
 
-        app_input = torch.cat((x1,x3, parse1, p2), 1) 
+        app_input = torch.cat((x1,x3, parse1, p2), 1)
         x = self.app_trans_net(app_input)
         x= self.refine_attn(x)
         x = self.refine_upsample_net(x)
