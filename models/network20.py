@@ -383,7 +383,7 @@ class PINet(nn.Module):
 
     def forward_image(self, input):
         x1, x2, x3, x4 = input
-        p1, p2 = x2.split(18, dim=1)
+        p1, p2 = x2.split(17, dim=1)
         parse1 = x4
 
         app_input = torch.cat((x1,x3, parse1, p2), 1)

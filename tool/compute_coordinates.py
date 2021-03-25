@@ -57,8 +57,8 @@ class PoseEstimator:
         preds, maxvals = get_final_preds(output)
         points = (preds[0] * SCALE_FACTOR).astype(int)[..., ::-1]
         maxvals = maxvals[0]
-        invalid = (points[..., 0] >= width) | (
-            points[..., 1] >= height) | (maxvals[..., 0] < TRESHOLD)
+        invalid = (points[..., 1] >= width) | (
+            points[..., 0] >= height) | (maxvals[..., 0] < TRESHOLD)
         points[invalid] = -1
         return points
 
@@ -73,16 +73,16 @@ class PoseEstimator:
             output = self.model(batch).detach().cpu().numpy()
         preds, maxvals = get_final_preds(output)
         points = (preds * SCALE_FACTOR).astype(int)[..., ::-1]
-        invalid = (points[..., 0] >= width) | (
-            points[..., 1] >= height) | (maxvals[..., 0] < TRESHOLD)
+        invalid = (points[..., 1] >= width) | (
+            points[..., 0] >= height) | (maxvals[..., 0] < TRESHOLD)
         points[invalid] = -1
         return points
 
 
 if __name__ == '__main__':
     # most important parameters
-    input_folder = './test_data/test/'
-    output_path = './test_data/test-annotation-test.csv'
+    input_folder = './fashion_data/train/'
+    output_path = './fashion_data/fasion-resize-annotation-train.csv'
     pose_estimator = 'assets/pretrains/pose_hrnet_w48_384x288.pth'
 
     batch_size = 128

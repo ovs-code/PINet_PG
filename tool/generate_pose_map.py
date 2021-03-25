@@ -5,6 +5,8 @@ import pandas as pd
 import json
 import os
 
+from tqdm import tqdm
+
 MISSING_VALUE = -1
 
 
@@ -31,11 +33,11 @@ def compute_pose(image_dir, annotations_file, savePath, sigma=6):
     annotations_file = annotations_file.set_index('name')
     image_size = (256, 176)
     cnt = len(annotations_file)
-    for i in range(cnt):
-        print('processing %d / %d ...' % (i, cnt))
+    for i in tqdm(range(cnt)):
+        # print('processing %d / %d ...' % (i, cnt))
         row = annotations_file.iloc[i]
         name = row.name
-        print(savePath, name)
+        # print(savePath, name)
         file_name = os.path.join(savePath, name + '.npy')
         kp_array = load_pose_cords_from_strings(
             row.keypoints_y, row.keypoints_x)
@@ -46,7 +48,7 @@ def compute_pose(image_dir, annotations_file, savePath, sigma=6):
 
 if __name__ == '__main__':
     # fix PATH
-    img_dir = 'test_data'  # raw image path
-    annotations_file = 'test_data/test-annotation-test.csv'  # pose annotation path
-    save_path = 'test_data/testK'  # path to store pose maps
+    img_dir = 'fashion_data'  # raw image path
+    annotations_file = 'fashion_data/fasion-resize-annotation-train.csv'  # pose annotation path
+    save_path = 'fashion_data/trainK'  # path to store pose maps
     compute_pose(img_dir, annotations_file, save_path)
