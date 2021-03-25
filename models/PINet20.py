@@ -109,12 +109,23 @@ class TransferModel(nn.Module):
                 self.criterionL1 = L1_plus_perceptualLoss(opt.lambda_A, opt.lambda_B, opt.perceptual_layers, self.gpu_ids, opt.percep_is_l1)
             else:
                 raise Excption('Unsurportted type of L1!')
+            self.criterion_cycle = torch.nn.L1Loss()
+            self.loss_cycle = torch.tensor(0)
             # initialize optimizers
-            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            opt_args = dict(lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), **opt_args)
+            # all parameters of self.netG except the parsing ones
+            image_params = itertools.chain(
+                self.netG.model.refine_attn.parameters(),
+                self.netG.model.app_trans_net.parameters(),
+                self.netG.model.refine_upsample_net.parameters()
+            )
+            self.optimizer_image_G = torch.optim.Adam(image_params, **opt_args)
+            self.optimizer_parsing_G = torch.optim.Adam(self.netG.model.ParsingNet.parameters(), **opt_args)
             if opt.with_D_PB:
-                self.optimizer_D_PB = torch.optim.Adam(self.netD_PB.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                self.optimizer_D_PB = torch.optim.Adam(self.netD_PB.parameters(), **opt_args)
             if opt.with_D_PP:
-                self.optimizer_D_PP = torch.optim.Adam(self.netD_PP.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+                self.optimizer_D_PP = torch.optim.Adam(self.netD_PP.parameters(), **opt_args)
 
             self.optimizers = []
             self.schedulers = []
@@ -179,6 +190,30 @@ class TransferModel(nn.Module):
                   self.input_SPL1_onehot, self.input_SPL2_onehot]
         self.fake_p2, self.fake_parse = self.netG(G_input)
 
+    def prepare_forward(self):
+        self.input_P1 = Variable(self.input_P1_set)
+        self.input_KP1 = Variable(self.input_KP1_set)
+        self.input_SPL1 = Variable(self.input_SPL1_set)
+
+        self.input_P2 = Variable(self.input_P2_set)
+        self.input_KP2 = Variable(self.input_KP2_set)
+        self.input_SPL2 = Variable(self.input_SPL2_set) #bs 1 256 176
+        self.input_SPL1_onehot = Variable(self.input_SPL1_onehot_set)
+        self.input_SPL2_onehot = Variable(self.input_SPL2_onehot_set)
+
+    def forward_parsing(self):
+        parse_input = torch.cat((
+            self.input_P1,
+            self.input_SPL1_onehot,
+            torch.cat((self.input_KP1, self.input_KP2), 1)
+        ), 1)
+        self.fake_parse = self.netG.model.ParsingNet(parse_input)
+
+    def forward_image(self):
+        G_input = [self.input_P1,
+                   torch.cat((self.input_KP1, self.input_KP2), 1),
+                  self.input_SPL1_onehot, self.input_SPL2_onehot]
+        self.fake_p2 = self.netG.model.forward_image(G_input)
 
     def test(self):
         self.input_P1 = Variable(self.input_P1_set)
@@ -247,11 +282,34 @@ class TransferModel(nn.Module):
 
         self.L1 = L1_per[1]
         self.per = L1_per[2]
-        self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2
+        self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2 * self.opt.lambda_GAN
+        if self.opt.cycle_gan:
+            G_input = [self.fake_p2,
+                   torch.cat((self.input_KP2, self.input_KP1), 1),
+                   self.input_SPL2_onehot, self.input_SPL1_onehot]
+            fake_P1, _ = self.netG(G_input)
+            self.loss_cycle = self.criterion_cycle(fake_P1, self.input_P1) * self.opt.lambda_cycle
 
-        self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN * self.opt.lambda_GAN+ self.maskloss1
+        self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN + self.maskloss1 + self.loss_cycle
         self.loss_mask.backward()
 
+    def backward_parsing_G(self):
+        mask = self.input_SPL2.squeeze(1).long()
+        self.maskloss1 = self.parseLoss(self.fake_parse, mask)
+        self.maskloss1.backward()
+
+    def backward_image_G(self):
+        L1_per = self.criterionL1(self.fake_p2, self.input_P2)
+        self.loss_G_L1 = L1_per[0]
+        pred_fake = self.netD_PB(torch.cat((self.input_KP2, self.fake_p2),1))
+        pred_fake_pp = self.netD_PP(torch.cat((self.fake_p2,self.input_P1),1))
+
+        self.L1 = L1_per[1]
+        self.per = L1_per[2]
+        self.loss_G_GAN = (self.criterionGAN(pred_fake, True) + self.criterionGAN(pred_fake_pp, True))/2  * self.opt.lambda_GAN
+
+        self.loss_mask = self.loss_G_L1 + self.loss_G_GAN + self.loss_cycle
+        self.loss_mask.backward()
 
     def optimize_parameters(self):
         self.forward()
@@ -266,6 +324,24 @@ class TransferModel(nn.Module):
         self.optimizer_G.step()
 
 
+    def optimize_parameters_seperate(self):
+        self.prepare_forward()
+
+        self.forward_parsing()
+        self.optimizer_parsing_G.zero_grad()
+        self.backward_parsing_G()
+        self.optimizer_parsing_G.step()
+
+        self.forward_image()
+        self.optimizer_D_PB.zero_grad()
+        self.optimizer_D_PP.zero_grad()
+        self.backward_D()
+        self.optimizer_D_PB.step()
+        self.optimizer_D_PP.step()
+        self.optimizer_image_G.zero_grad()
+        self.backward_image_G()
+        self.optimizer_image_G.step()
+
 
     def get_current_errors(self):
         ret_errors = OrderedDict()
@@ -277,6 +353,7 @@ class TransferModel(nn.Module):
             ret_errors['PP'] = self.loss_DPP_fake
             ret_errors['pair_GANloss'] = self.loss_G_GAN.data.item()
             ret_errors['parsing1'] = self.maskloss1.data.item()
+            ret_errors['cycle_loss'] = self.loss_cycle.data.item()
 
 
 

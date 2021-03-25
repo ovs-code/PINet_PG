@@ -4,6 +4,7 @@ from data.data_loader import CreateDataLoader
 from models.PINet20 import create_model
 from util.visualizer import Visualizer
 
+
 opt = TrainOptions().parse()
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
@@ -15,7 +16,7 @@ visualizer = Visualizer(opt)
 total_steps = 0
 
 
-for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
+for epoch in range(opt.epoch_count, opt.sepiter + opt.niter + opt.niter_decay + 1):
     epoch_start_time = time.time()
     epoch_iter = 0
 
@@ -25,7 +26,11 @@ for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
         total_steps += opt.batchSize
         epoch_iter += opt.batchSize
         model.set_input(data)
-        model.optimize_parameters()
+
+        if epoch <= opt.sepiter:
+            model.optimize_parameters_seperate()
+        else:
+            model.optimize_parameters()
 
         if total_steps % opt.display_freq == 0:
             save_result = total_steps % opt.update_html_freq == 0
@@ -50,5 +55,5 @@ for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
         model.save(epoch)
 
     print('End of epoch %d / %d \t Time Taken: %d sec' %
-          (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
+          (epoch, opt.sepiter + opt.niter + opt.niter_decay, time.time() - epoch_start_time))
     model.update_learning_rate()
