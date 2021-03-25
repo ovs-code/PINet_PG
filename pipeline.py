@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+
 import numpy as np
 import torch
 from keras.models import load_model

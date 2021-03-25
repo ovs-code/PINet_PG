@@ -395,7 +395,7 @@ class PINet(nn.Module):
 
     def forward(self, input):
         x1, x2, x3, x4 = input
-        p1, p2 = x2.split(18, dim=1)
+        p1, p2 = x2.split(17, dim=1)
         parse_input = torch.cat((x1, x3, x2), 1)
         parse = self.ParsingNet(parse_input)
         parse1 = parse.detach()

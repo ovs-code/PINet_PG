@@ -22,7 +22,7 @@ def tensor2im(image_tensor, need_dec=False, imtype=np.uint8):
         image_numpy = image_tensor[0].cpu().float().numpy()
     else:
         image_numpy = image_tensor.cpu().float().numpy()
-    
+
     if image_numpy.shape[0] == 1:
         image_numpy = np.tile(image_numpy, (3, 1, 1))
 
@@ -32,7 +32,7 @@ def tensor2im(image_tensor, need_dec=False, imtype=np.uint8):
         image_numpy = decode_labels(image_numpy.astype(int))
     else:
         image_numpy = (image_numpy + 1) / 2.0 * 255.0
-    
+
     return image_numpy.astype(imtype)
 #label color
 label_colours = [(0,0,0)
@@ -49,14 +49,19 @@ COLORS = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0]
           [170, 0, 255], [255, 0, 255], [255, 0, 170], [255, 0, 85]]
 
 
-LABELS = ['nose', 'neck', 'Rsho', 'Relb', 'Rwri', 'Lsho', 'Lelb', 'Lwri',
-               'Rhip', 'Rkne', 'Rank', 'Lhip', 'Lkne', 'Lank', 'Leye', 'Reye', 'Lear', 'Rear']
+LABELS = [
+    'nose', 'left_eye', 'right_eye', 'left_ear',
+    'right_ear', 'left_shoulder', 'right_shoulder',
+    'left_elbow', 'right_elbow', 'left_wrist',
+    'right_wrist', 'left_hip', 'right_hip', 'left_knee',
+    'right_knee', 'left_ankle', 'right_ankle'
+]
 
 MISSING_VALUE = -1
 
 def map_to_cord(pose_map, threshold=0.1):
-    all_peaks = [[] for i in range(18)]
-    pose_map = pose_map[..., :18]
+    all_peaks = [[] for i in range(17)]
+    pose_map = pose_map[..., :17]
 
     y, x, z = np.where(np.logical_and(pose_map == pose_map.max(axis = (0, 1)),
                                      pose_map > threshold))
@@ -66,7 +71,7 @@ def map_to_cord(pose_map, threshold=0.1):
     x_values = []
     y_values = []
 
-    for i in range(18):
+    for i in range(17):
         if len(all_peaks[i]) != 0:
             x_values.append(all_peaks[i][0][0])
             y_values.append(all_peaks[i][0][1])
@@ -196,14 +201,14 @@ def write_pickle_file(pkl_path, data_dict):
 
 def decode_labels(mask, num_images=1, num_classes=20):
     """Decode batch of segmentation masks.
-    
+
     Args:
       mask: result of inference after taking argmax.
       num_images: number of images to decode from the batch.
       num_classes: number of classes to predict (including background).
-    
+
     Returns:
-      A batch with num_images RGB images of the same size as the input. 
+      A batch with num_images RGB images of the same size as the input.
     """
     h, w, c = mask.shape
     #assert(n >= num_images), 'Batch size %d should be greater or equal than number of images to save %d.' % (n, num_images)
