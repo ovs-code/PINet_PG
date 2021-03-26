@@ -16,6 +16,15 @@ INPUT_SIZE = (384, 288)
 TRESHOLD = 0.05
 SCALE_FACTOR = 4
 
+DEFAULT_ARGS = Namespace(
+    cfg=pkg_resources.resource_filename(
+        'hrnet_pose', 'yaml/coco/hrnet/w48_384x288_adam_lr1e-3.yaml'),
+    dataDir='.',
+    logDir='.',
+    modelDir='.',
+    prevModelDir='.'
+)
+
 
 def pad_image(image: Image, target_size: Tuple[int, int], color='white') -> Image:
     "Pad the input image to the left and bottom"
@@ -87,15 +96,8 @@ if __name__ == '__main__':
 
     batch_size = 128
 
-    args = Namespace(
-        cfg=pkg_resources.resource_filename(
-            'hrnet_pose', 'yaml/coco/hrnet/w48_384x288_adam_lr1e-3.yaml'),
-        dataDir='.',
-        logDir='.',
-        modelDir='.',
-        opts=['TEST.MODEL_FILE', pose_estimator],
-        prevModelDir='.'
-    )
+    args = DEFAULT_ARGS
+    args.opts = ['TEST.MODEL_FILE', pose_estimator]
     update_config(cfg, args)
 
     model = PoseEstimator(cfg, use_cuda=True)

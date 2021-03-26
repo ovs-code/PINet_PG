@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from tool.compute_coordinates import PoseEstimator, DEFAULT_ARGS
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 import numpy as np
@@ -35,14 +36,15 @@ class InferencePipeline:
         TEST_SEG_PATH = 'test_data/testSPL2/randomphoto_small.png'
 
         pinet = create_model(opt).eval()
-        pose_estimator = load_model(opt.pose_estimator, compile=False)
+        args = DEFAULT_ARGS
+        args.opts = ['TEST.MODEL_FILE', opt.pose_estimator]
+        pose_estimator = PoseEstimator(args, opt.gpu_ids != [])
         segmentator = DummySegmentationModel(TEST_SEG_PATH)
         return cls(pose_estimator, pinet, segmentator, opt)
 
     def __call__(self, image: Image, target_pose_map: torch.Tensor) -> Image:
         # get pose
-        imgBGR = np.array(image)[:, :, ::-1]
-        pose = get_coords(imgBGR, self.pose_estimator)
+        pose = self.pose_estimator.infer(image)
 
         # convert to pose map
         pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))
