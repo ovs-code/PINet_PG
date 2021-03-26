@@ -48,7 +48,7 @@ def compute_pose(image_dir, annotations_file, savePath, sigma=6):
 
 if __name__ == '__main__':
     # fix PATH
-    img_dir = 'fashion_data'  # raw image path
-    annotations_file = 'fashion_data/fasion-resize-annotation-train.csv'  # pose annotation path
-    save_path = 'fashion_data/trainK'  # path to store pose maps
+    img_dir = 'test_data'  # raw image path
+    annotations_file = 'fashion_data/fasion-resize-annotation-test.csv'  # pose annotation path
+    save_path = 'fashion_data/testK'  # path to store pose maps
     compute_pose(img_dir, annotations_file, save_path)

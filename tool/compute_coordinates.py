@@ -39,7 +39,8 @@ def pad_image(image: Image, target_size: Tuple[int, int], color='white') -> Imag
 
 class PoseEstimator:
 
-    def __init__(self, cfg, use_cuda):
+    def __init__(self, args, use_cuda):
+        update_config(cfg, args)
         self.model = models.pose_hrnet.get_pose_net(cfg, False)
         if use_cuda:
             self.model = self.model.cuda()
@@ -90,17 +91,16 @@ class PoseEstimator:
 
 if __name__ == '__main__':
     # most important parameters
-    input_folder = './fashion_data/train/'
-    output_path = './fashion_data/fasion-resize-annotation-train.csv'
+    input_folder = './fashion_data/test/'
+    output_path = './fashion_data/fasion-resize-annotation-test.csv'
     pose_estimator = 'assets/pretrains/pose_hrnet_w48_384x288.pth'
 
     batch_size = 128
 
     args = DEFAULT_ARGS
     args.opts = ['TEST.MODEL_FILE', pose_estimator]
-    update_config(cfg, args)
 
-    model = PoseEstimator(cfg, use_cuda=True)
+    model = PoseEstimator(args, use_cuda=True)
 
     with open(output_path, 'w') as result_file:
         processed_names = set()

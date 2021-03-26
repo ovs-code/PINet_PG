@@ -12,7 +12,8 @@ from torchvision import transforms
 
 from models.PINet20 import TransferModel, create_model
 from options.infer_options import InferOptions
-from tool import cords_to_map, get_coords, reorder_pose, load_pose_from_file
+from tool import cords_to_map, reorder_pose, load_pose_from_file
+from tool.compute_coordinates import cfg, update_config
 from util import util
 
 IMAGE_SIZE = (256, 176)
@@ -91,7 +92,7 @@ class DummySegmentationModel:
 
 
 if __name__ == '__main__':
-    SOURCE_IMAGE_PATH = 'test_data/test/randomphoto_small.jpg'
+    SOURCE_IMAGE_PATH = 'test_data/test/Oskar_pad_small.jpg'
     TARGET_POSE_PATH = 'test_data/testK/randomphoto_small.jpg.npy'
     OUPUT_PATH = 'test_data/out.jpg'
 
@@ -100,7 +101,6 @@ if __name__ == '__main__':
 
     source_image = Image.open(SOURCE_IMAGE_PATH)
     target_pose = load_pose_from_file(TARGET_POSE_PATH)
-
     output_image = pipeline(source_image, target_pose)
 
     output_image.save(OUPUT_PATH)
