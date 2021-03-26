@@ -26,16 +26,12 @@ DEFAULT_ARGS = Namespace(
 )
 
 
-def pad_image(image: Image, target_size: Tuple[int, int], color='white') -> Image:
+def pad_image(image: torch.Tensor, target_size: Tuple[int, int], color='white') -> Image:
     "Pad the input image to the left and bottom"
-    width, height = image.size
-    if width > target_size[0] or height > target_size[1]:
-        raise ValueError('Image too large in at least one dimension.')
-
-    padded = Image.new('RGB', target_size, color)
-    padded.paste(image, (0, 0))
+    padded = torch.ones((3, 288, 384))
+    c, h, w = image.shape
+    padded[:c, :h, :w] = image
     return padded
-
 
 class PoseEstimator:
 
@@ -48,18 +44,13 @@ class PoseEstimator:
             cfg.TEST.MODEL_FILE), strict=False)
         self.model.eval()
         self.use_cuda = use_cuda
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
-                                 0.229, 0.224, 0.225])
-        ])
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 
-    def infer(self, image: Image):
+    def infer(self, image: torch.Tensor):
         """Takes an input RGB image <= INPUT_SIZE and returns an (17 x 2)-array"""
-        width, height = image.size
-        if image.size != INPUT_SIZE:
-            image = pad_image(image, INPUT_SIZE)
-        batch = self.transform(image).unsqueeze(0)
+        _, height, width = image.shape
+        image = pad_image(image, INPUT_SIZE)
+        batch = self.normalize(image).unsqueeze(0)
         if self.use_cuda:
             batch = batch.cuda()
         with torch.no_grad():
@@ -73,10 +64,9 @@ class PoseEstimator:
         return points
 
     def infer_batch(self, images):
-        width, height = images[0].size
-        if images[0].size != INPUT_SIZE:
-            images = [pad_image(image, INPUT_SIZE) for image in images]
-        batch = torch.stack([self.transform(image) for image in images])
+        _, height, width = images[0].shape
+        images = [pad_image(image, INPUT_SIZE) for image in images]
+        batch = torch.stack([self.normalize(image) for image in images])
         if self.use_cuda:
             batch = batch.cuda()
         with torch.no_grad():

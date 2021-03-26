@@ -26,10 +26,7 @@ class InferencePipeline:
         self.pinet = pinet
         self.segmentator = segmentator
         self.opt = opt
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
+        self.normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 
     @classmethod
     def from_opts(cls, opt) -> InferencePipeline:
@@ -44,17 +41,20 @@ class InferencePipeline:
         return cls(pose_estimator, pinet, segmentator, opt)
 
     def __call__(self, image: Image, target_pose_map: torch.Tensor) -> Image:
+        # convert Image to Tensor
+        tensor = transforms.functional.to_tensor(image)
+
         # get pose
-        pose = self.pose_estimator.infer(image)
+        pose = self.pose_estimator.infer(tensor)
 
         # convert to pose map
         pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))
 
         # get segmentation map ...
-        spl_onehot = self.segmentator.get_segmap(image).unsqueeze(0)
+        spl_onehot = self.segmentator.get_segmap(tensor).unsqueeze(0)
 
         # run PINet
-        image_norm = self.transform(image).unsqueeze(0)
+        image_norm = self.normalize(tensor).unsqueeze(0)
 
         if self.opt.gpu_ids:
             # move data to GPU
