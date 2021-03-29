@@ -59,6 +59,21 @@ img {
   height: 0;
 }
 
-.hiddenradio [type=radio]:checked + img {
+.hiddenradio [type=radio]:checked + canvas{
   outline: 2px solid rgb(37, 228, 53);
+}
+
+.img-label {
+  width: 100%;
+  background-color: black;
+  display: block;
+  z-index: 2;
+}
+
+canvas {
+  width: 100%;
+  display: block;
+  position: relative;
+  z-index: 1;
+
 }

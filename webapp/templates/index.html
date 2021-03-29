@@ -17,13 +17,14 @@
 			<label class="custom-file-label" for="id_file">Upload Image</label>
 		</div>
 		<button id="confirm-btn" class="btn btn-primary mt-3 not-visible">Next (Upload file)</button>
+
 		<h2>Select Target Pose</h2>
-		<div class="row hiddenradio">
-			{% for i in range(6)%}
-			<div class="col-lg-2 col-md-4 col-sm-12">
-				<label>
-					<input type="radio" name="inputPose" value="{{ i }}">
-					<img src="123" alt="pose {{ i }}">
+		<div id="canvasBox" class="row hiddenradio">
+			{% for pose in poses %}
+			<div class="inputPoseContainer col-xl-2 col-md-4 col-6">
+				<label class="img-label">
+					<input type="radio" name="inputPose" value="{{ loop.index0 }}">
+					<canvas data-pose="{{ pose|tojson }}" id="pose{{ loop.index0 }}" style="border: 1px solid #000"></canvas>
 				</label>
 			</div>
 			{% endfor %}
@@ -34,7 +35,7 @@
 			<div class="col-7">
 				<h2>Output Image</h2>
 				<div class="scan">
-					<img id="inputImage" src="{{ output_image }}" />
+					<img class="img-fluid" id="inputImage" src="{{ output_image }}" />
 					<canvas id="resultsCanvas"></canvas>
 				</div>
 			</div>

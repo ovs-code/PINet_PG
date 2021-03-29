@@ -20,8 +20,9 @@ input.addEventListener('change', ()=>{
     console.log($image)
 
     const cropper = new Cropper(image, {
-        minCropBoxWidth: 176,
-        minCropBoxHeight: 256,
+        autoCrop: true,
+        autoCropArea: 0,
+        initialAspectRatio: 176/256,
         cropBoxResizable: false,
         crop: function(event) {
             console.log(event.detail.x);
@@ -31,13 +32,16 @@ input.addEventListener('change', ()=>{
             console.log(event.detail.rotate);
             console.log(event.detail.scaleX);
             console.log(event.detail.scaleY);
-        }
+        },
+        dragMode: 'move',
+        movable: false
     });
     
     confirmBtn.addEventListener('click', ()=>{
         cropper.getCroppedCanvas({
             width: 176,
-            height: 256
+            height: 256,
+            fillColor: 'white',
         }).toBlob((blob) => {
             console.log('confirmed')
             const fd = new FormData();
@@ -70,3 +74,48 @@ input.addEventListener('change', ()=>{
         })
     })
 })
+
+LIMB_SEQ = JSON.parse("[[5,7], [7, 9], [5, 6], [6, 8], [8, 10], [5, 11], [11, 12], [6, 12], [11, 13], [13, 15], [12, 14], [14, 16]]")
+
+MISSING_VALUE = -1
+
+function drawLine(ctx, from, to) {
+    ctx.strokeStyle = 'white'
+    ctx.beginPath();
+    ctx.moveTo(from[1], from[0]);
+    ctx.lineTo(to[1], to[0]);
+    ctx.stroke();
+}
+// function for drawing the poses
+function drawPose(canvas, pose){
+    if(canvas.getContext){
+        canvas.width = 176
+        canvas.height = 256
+        var ctx = canvas.getContext('2d');
+        
+        LIMB_SEQ.forEach(limb => {
+            if(pose[limb[0]][0] === MISSING_VALUE | pose[limb[0]][1] === MISSING_VALUE | pose[limb[1]][0] === MISSING_VALUE | pose[limb[1]][1] === MISSING_VALUE) {
+                return;
+            } else {
+                drawLine(ctx, pose[limb[1]], pose[limb[0]]);
+            }
+        })
+        ctx.fillStyle = 'red';
+        pose.forEach(limb => {
+            if (limb[0] === MISSING_VALUE | limb[1] === MISSING_VALUE) {
+                return;
+            }
+            ctx.fillRect(limb[1], limb[0], 5, 5);
+        });
+    }
+}
+
+const posesBox = document.getElementById('posesBox')
+var numPoses = 1  // set this for the number of selectable poses
+
+for (let index = 0; index < numPoses; index++) {
+    var canvas = document.getElementById(`pose${index}`)
+    var pose = JSON.parse(canvas.dataset.pose)
+
+    drawPose(canvas, pose);
+}

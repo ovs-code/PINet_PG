@@ -16,8 +16,8 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # read inference options and create new pipeline
-opt = InferOptions().parse(['--name', 'fashion_PInet_PG', '--pose_estimator', 'assets/pretrains/pose_estimator.h5'])
-pipeline = InferencePipeline.from_opts(opt=opt)
+# opt = InferOptions().parse(['--name', 'fashion_PInet_PG', '--pose_estimator', 'assets/pretrains/pose_estimator.h5'])
+# pipeline = InferencePipeline.from_opts(opt=opt)
 
 # set the directory for the templates
 template_dir = os.path.abspath('./webapp/templates')
@@ -62,10 +62,14 @@ def index():
         # do remapping of the inputPose
 
         source_image = Image.open(image).convert(mode='RGB')
-        print(source_image.size, source_image.mode)
+        img_width, img_height = source_image.size
+        if img_width != 176 or img_height != 256:
+            flash('Image has wrong input format. Try again.')
+            return redirect(request.url)
         
         # generate the output image
-        output_image = pipeline(image=source_image, target_pose_map=target_pose)
+        # output_image = pipeline(image=source_image, target_pose_map=target_pose)
+        output_image = None
 
         # filename = secure_filename(output_image.filename)
         # file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -73,13 +77,16 @@ def index():
         return render_template('index.html', output_image=output_image) 
     elif request.method == 'GET':
         print('GET request received')
-        return render_template('index.html')
+        # render some dummy output
+        pose = list(zip([49, 43, 43, 49, 49, 87, 83, 129, 121, 155, 153, 149, 151, 151, 151, 177, 179], [97, 103, 93, 111, 85, 123, 71, 123, 61, 99, 71, 107, 73, 155, 21, 85, 93]))
+        poses = [pose]
+        return render_template('index.html', poses=poses)
     else:
         return f'error {request.method} method not implemented'
 
 @app.route('/impressum')
 def impressum():
-    return 'This is the impressum'
+    return render_template('impressum.html')
 
 with app.test_request_context():
     print(url_for('index'))
