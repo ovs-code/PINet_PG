@@ -38,15 +38,4 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--no_dropout_D', action='store_true', help='no dropout for the discriminator')
         self.parser.add_argument('--DG_ratio', type=int, default=1, help='how many times for D training after training G once')
 
-
-        self.parser.add_argument('--map_name', type=str, default='uv_seg', help='mapping function')
-        self.parser.add_argument('--part_info', type=str, default='assets/pretrains/smpl_part_info.json',
-                                  help='smpl part info path.')
-        self.parser.add_argument('--uv_mapping', type=str, default='assets/pretrains/mapper.txt',
-                                  help='uv mapping.')
-        self.parser.add_argument('--hmr_model', type=str, default='assets/pretrains/hmr_tf2pt.pth',
-                                  help='pretrained hmr model path.')
-        self.parser.add_argument('--smpl_model', type=str, default='assets/pretrains/smpl_model.pkl',
-                                  help='pretrained smpl model path.')
-
         self.isTrain = True

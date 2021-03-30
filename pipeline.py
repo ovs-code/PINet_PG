@@ -1,19 +1,14 @@
 from __future__ import annotations
 
-import os
-from tool.compute_coordinates import PoseEstimator, DEFAULT_ARGS
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-
 import numpy as np
 import torch
-from keras.models import load_model
 from PIL import Image
 from torchvision import transforms
 
 from models.PINet20 import TransferModel, create_model
 from options.infer_options import InferOptions
-from tool import cords_to_map, reorder_pose, load_pose_from_file
-from tool.compute_coordinates import cfg, update_config
+from tool import cords_to_map, load_pose_from_file, reorder_pose
+from tool.compute_coordinates import DEFAULT_ARGS, PoseEstimator
 from util import util
 
 IMAGE_SIZE = (256, 176)
@@ -63,7 +58,7 @@ class InferencePipeline:
             target_pose_map = target_pose_map.cuda(device)
             image_norm = image_norm.cuda(device)
             spl_onehot = spl_onehot.cuda(device)
-
+        # TODO: add torch.no_grad
         output_image, output_segmentation = self.pinet.infer(
             image_norm, pose_map, target_pose_map, spl_onehot)
         return Image.fromarray(util.tensor2im(output_image))
@@ -77,7 +72,7 @@ class DummySegmentationModel:
         num_class = 12
         SPL_path = self.path
         SPL_img = Image.open(SPL_path)
-        if np.array(SPL_img).shape[1]==256:
+        if np.array(SPL_img).shape[1] == 256:
             SPL_img = SPL_img.crop((40, 0, 216, 256))
         SPL_img = SPL_img.transpose(Image.FLIP_LEFT_RIGHT)
         SPL_img = np.expand_dims(np.array(SPL_img), 0)
