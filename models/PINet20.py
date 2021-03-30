@@ -258,16 +258,20 @@ class TransferModel(nn.Module):
         loss_D = (loss_D_real + loss_D_fake) * 0.5
         # backward
         loss_D.backward()
-        return loss_D
+        return loss_D, loss_D_real, loss_D_fake
 
     def backward_D(self):
         self.pred_fake = self.fake_PB_pool.query(torch.cat((self.input_KP2, self.fake_p2 ),1).data)
         self.pred_real = torch.cat((self.input_KP2, self.input_P2),1)
-        self.loss_DPB_fake = self.backward_D_basic(self.netD_PB ,self.pred_real, self.pred_fake).item()
+        _, lr, lf = self.backward_D_basic(self.netD_PB ,self.pred_real, self.pred_fake)
+        self.loss_DPB_fake_fake = lf.item()
+        self.loss_DPB_fake_real = lr.item()
 
         self.pred_fake = self.fake_PP_pool.query(torch.cat((self.fake_p2,self.input_P1),1).data)
         self.pred_real = torch.cat((self.input_P2,self.input_P1),1)
-        self.loss_DPP_fake = self.backward_D_basic(self.netD_PP ,self.pred_real, self.pred_fake).item()
+        _, lr, lf = self.backward_D_basic(self.netD_PP ,self.pred_real, self.pred_fake)
+        self.loss_DPP_fake_fake = lf.item()
+        self.loss_DPP_fake_real = lr.item()
 
 
     def backward_G(self):
@@ -349,8 +353,10 @@ class TransferModel(nn.Module):
             ret_errors['L1_plus_perceptualLoss'] = self.loss_G_L1
             ret_errors['percetual'] = self.per
             ret_errors['L1'] = self.L1
-            ret_errors['PB'] = self.loss_DPB_fake
-            ret_errors['PP'] = self.loss_DPP_fake
+            ret_errors['PB_fake'] = self.loss_DPB_fake_fake
+            ret_errors['PB_real'] = self.loss_DPB_fake_real
+            ret_errors['PP_fake'] = self.loss_DPP_fake_fake
+            ret_errors['PP_real'] = self.loss_DPP_fake_real
             ret_errors['pair_GANloss'] = self.loss_G_GAN.data.item()
             ret_errors['parsing1'] = self.maskloss1.data.item()
             ret_errors['cycle_loss'] = self.loss_cycle.data.item()
