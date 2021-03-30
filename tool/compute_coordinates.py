@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import os
 from argparse import Namespace
+from pipeline import IMAGE_SIZE
 from typing import List, Tuple
 
 import pkg_resources
@@ -12,13 +13,14 @@ from hrnet_pose.core.inference import get_final_preds
 from PIL import Image
 from torchvision import transforms
 
-INPUT_SIZE = (384, 288)
-TRESHOLD = 0.05
+INPUT_SIZE = 256, 192
+IMAGE_SIZE = 176, 256
+TRESHOLD = 0.15
 SCALE_FACTOR = 4
 
 DEFAULT_ARGS = Namespace(
     cfg=pkg_resources.resource_filename(
-        'hrnet_pose', 'yaml/coco/hrnet/w48_384x288_adam_lr1e-3.yaml'),
+        'hrnet_pose', 'yaml/coco/hrnet/w48_256x192_adam_lr1e-3.yaml'),
     dataDir='.',
     logDir='.',
     modelDir='.',
@@ -33,6 +35,12 @@ def pad_image(image: torch.Tensor, target_size: Tuple[int, int], color='white') 
     padded[:c, :h, :w] = image
     return padded
 
+
+def transform_preds(p):
+    # rotate -90 deg and scale to image dimensions
+    p[..., 1] = (INPUT_SIZE - 1 - p[..., 1]*SCALE_FACTOR) * IMAGE_SIZE[0] // INPUT_SIZE[1]
+    p[..., 0] = p[..., 0] * SCALE_FACTOR * IMAGE_SIZE[1] // INPUT_SIZE[0]
+
 class PoseEstimator:
 
     def __init__(self, args, use_cuda):
@@ -40,41 +48,41 @@ class PoseEstimator:
         self.model = models.pose_hrnet.get_pose_net(cfg, False)
         if use_cuda:
             self.model = self.model.cuda()
-        self.model.load_state_dict(torch.load(
-            cfg.TEST.MODEL_FILE), strict=False)
+        self.model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
         self.model.eval()
         self.use_cuda = use_cuda
-        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        self.transform = transforms.Compose([
+            transforms.Resize(INPUT_SIZE),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Lambda(lambda t: torch.rot90(t, dims=(1, 2)))
+        ])
 
-    def infer(self, image: torch.Tensor):
+    def infer(self, image: Image):
         """Takes an input RGB image <= INPUT_SIZE and returns an (17 x 2)-array"""
-        _, height, width = image.shape
-        image = pad_image(image, INPUT_SIZE)
-        batch = self.normalize(image).unsqueeze(0)
+        batch = self.transform(image).unsqueeze(0)
         if self.use_cuda:
             batch = batch.cuda()
         with torch.no_grad():
             output = self.model(batch).detach().cpu().numpy()
         preds, maxvals = get_final_preds(output)
-        points = (preds[0] * SCALE_FACTOR).astype(int)[..., ::-1]
+        transform_preds(preds)
+        points = preds[0].astype(int)
         maxvals = maxvals[0]
-        invalid = (points[..., 1] >= width) | (
-            points[..., 0] >= height) | (maxvals[..., 0] < TRESHOLD)
+        invalid = maxvals[..., 0] < TRESHOLD
         points[invalid] = -1
         return points
 
     def infer_batch(self, images):
-        _, height, width = images[0].shape
-        images = [pad_image(image, INPUT_SIZE) for image in images]
-        batch = torch.stack([self.normalize(image) for image in images])
+        batch = torch.stack([self.transform(image) for image in images])
         if self.use_cuda:
             batch = batch.cuda()
         with torch.no_grad():
             output = self.model(batch).detach().cpu().numpy()
         preds, maxvals = get_final_preds(output)
-        points = (preds * SCALE_FACTOR).astype(int)[..., ::-1]
-        invalid = (points[..., 1] >= width) | (
-            points[..., 0] >= height) | (maxvals[..., 0] < TRESHOLD)
+        transform_preds(preds)
+        points = preds.astype(int)
+        invalid = maxvals[..., 0] < TRESHOLD
         points[invalid] = -1
         return points
 
@@ -83,7 +91,7 @@ if __name__ == '__main__':
     # most important parameters
     input_folder = './fashion_data/test/'
     output_path = './fashion_data/fasion-resize-annotation-test.csv'
-    pose_estimator = 'assets/pretrains/pose_hrnet_w48_384x288.pth'
+    pose_estimator = 'assets/pretrains/pose_hrnet_w48_256x192.pth'
 
     batch_size = 128
 
