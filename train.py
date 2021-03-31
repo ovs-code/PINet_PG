@@ -4,6 +4,9 @@ from data.data_loader import CreateDataLoader
 from models.PINet20 import create_model
 from util.visualizer import Visualizer
 
+import torch
+torch.backends.cudnn.benchmark = True
+
 
 opt = TrainOptions().parse()
 data_loader = CreateDataLoader(opt)
