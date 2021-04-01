@@ -1,6 +1,6 @@
 import torch
 
-from .models import PINet20
+from models import PINet20
 
 KEYPOINT_MODEL_PATH = ""
 SEGMENTATION_MODEL_PATH = ""
