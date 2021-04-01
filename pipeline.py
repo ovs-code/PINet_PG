@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-import os
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-
 import numpy as np
 import torch
-from keras.models import load_model
 from PIL import Image
 from torchvision import transforms
 
 from models.PINet20 import TransferModel, create_model
 from options.infer_options import InferOptions
-from tool import cords_to_map, get_coords, reorder_pose, load_pose_from_file
+from tool import cords_to_map, load_pose_from_file, reorder_pose
+from tool.compute_coordinates import DEFAULT_ARGS, PoseEstimator
 from util import util
 
 IMAGE_SIZE = (256, 176)
@@ -24,10 +21,7 @@ class InferencePipeline:
         self.pinet = pinet
         self.segmentator = segmentator
         self.opt = opt
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-        ])
+        self.normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 
     @classmethod
     def from_opts(cls, opt) -> InferencePipeline:
@@ -35,23 +29,27 @@ class InferencePipeline:
         TEST_SEG_PATH = 'test_data/testSPL2/randomphoto_small.png'
 
         pinet = create_model(opt).eval()
-        pose_estimator = load_model(opt.pose_estimator, compile=False)
+        args = DEFAULT_ARGS
+        args.opts = ['TEST.MODEL_FILE', opt.pose_estimator]
+        pose_estimator = PoseEstimator(args, opt.gpu_ids != [])
         segmentator = DummySegmentationModel(TEST_SEG_PATH)
         return cls(pose_estimator, pinet, segmentator, opt)
 
     def __call__(self, image: Image, target_pose_map: torch.Tensor) -> Image:
+        # convert Image to Tensor
+        tensor = transforms.functional.to_tensor(image)
+
         # get pose
-        imgBGR = np.array(image)[:, :, ::-1]
-        pose = get_coords(imgBGR, self.pose_estimator)
+        pose = self.pose_estimator.infer(tensor)
 
         # convert to pose map
         pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))
 
         # get segmentation map ...
-        spl_onehot = self.segmentator.get_segmap(image).unsqueeze(0)
+        spl_onehot = self.segmentator.get_segmap(tensor).unsqueeze(0)
 
         # run PINet
-        image_norm = self.transform(image).unsqueeze(0)
+        image_norm = self.normalize(tensor).unsqueeze(0)
 
         if self.opt.gpu_ids:
             # move data to GPU
@@ -60,7 +58,7 @@ class InferencePipeline:
             target_pose_map = target_pose_map.cuda(device)
             image_norm = image_norm.cuda(device)
             spl_onehot = spl_onehot.cuda(device)
-
+        # TODO: add torch.no_grad
         output_image, output_segmentation = self.pinet.infer(
             image_norm, pose_map, target_pose_map, spl_onehot)
         return Image.fromarray(util.tensor2im(output_image))
@@ -74,7 +72,7 @@ class DummySegmentationModel:
         num_class = 12
         SPL_path = self.path
         SPL_img = Image.open(SPL_path)
-        if np.array(SPL_img).shape[1]==256:
+        if np.array(SPL_img).shape[1] == 256:
             SPL_img = SPL_img.crop((40, 0, 216, 256))
         SPL_img = SPL_img.transpose(Image.FLIP_LEFT_RIGHT)
         SPL_img = np.expand_dims(np.array(SPL_img), 0)
@@ -89,7 +87,7 @@ class DummySegmentationModel:
 
 
 if __name__ == '__main__':
-    SOURCE_IMAGE_PATH = 'test_data/test/randomphoto_small.jpg'
+    SOURCE_IMAGE_PATH = 'test_data/test/Oskar_pad_small.jpg'
     TARGET_POSE_PATH = 'test_data/testK/randomphoto_small.jpg.npy'
     OUPUT_PATH = 'test_data/out.jpg'
 
@@ -98,7 +96,6 @@ if __name__ == '__main__':
 
     source_image = Image.open(SOURCE_IMAGE_PATH)
     target_pose = load_pose_from_file(TARGET_POSE_PATH)
-
     output_image = pipeline(source_image, target_pose)
 
     output_image.save(OUPUT_PATH)

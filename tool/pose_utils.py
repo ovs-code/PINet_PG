@@ -26,8 +26,8 @@ MISSING_VALUE = -1
 
 
 def map_to_cord(pose_map, threshold=0.1):
-    all_peaks = [[] for i in range(18)]
-    pose_map = pose_map[..., :18]
+    all_peaks = [[] for i in range(17)]
+    pose_map = pose_map[..., :17]
 
     y, x, z = np.where(np.logical_and(pose_map == pose_map.max(axis = (0, 1)),
                                      pose_map > threshold))
@@ -37,7 +37,7 @@ def map_to_cord(pose_map, threshold=0.1):
     x_values = []
     y_values = []
 
-    for i in range(18):
+    for i in range(17):
         if len(all_peaks[i]) != 0:
             x_values.append(all_peaks[i][0][0])
             y_values.append(all_peaks[i][0][1])

@@ -108,9 +108,12 @@ class KeyDataset(data.Dataset):
 
         SPL1_path = os.path.join(self.dir_SL, P1_name[:-4]+'.png')
         SPL2_path = os.path.join(self.dir_SL, P2_name[:-4]+'.png')
-        SPL1_img = Image.open(SPL1_path).crop(regions)
-        SPL2_img = Image.open(SPL2_path).crop(regions)
-        
+        SPL1_img = Image.open(SPL1_path)
+        if SPL1_img.size[0]==256:
+            SPL1_img = SPL1_img.crop(regions)
+        SPL2_img = Image.open(SPL2_path)
+        if SPL2_img.size[0]==256:
+            SPL2_img = SPL2_img.crop(regions)        
 
 
         
