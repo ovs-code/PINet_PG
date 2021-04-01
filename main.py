@@ -1,9 +1,14 @@
-from flask import Flask, url_for, render_template, request, session, redirect, flash
+from flask import Flask, url_for, render_template, request, session, redirect, flash, jsonify, send_file
 from markupsafe import escape
 from werkzeug.utils import secure_filename
 import os
 import sys
 import torch
+import io
+import base64
+
+# import asyncio
+# from mlq.queue import MLQ
 
 from PIL import Image
 
@@ -39,12 +44,52 @@ target_pose = load_pose_from_file(TARGET_POSE_PATH)
 # Set the allowed extensions (i.e. only images)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp'}
 
+# the poses one can select from
+CROSSED_LEG_POSE = list(zip([49, 43, 43, 49, 49, 87, 83, 129, 121, 155, 153, 149, 151, 151, 151, 177, 179], [97, 103, 93, 111, 85, 123, 71, 123, 61, 99, 71, 107, 73, 155, 21, 85, 93]))
+
+# dummy image for testing the server
+DUMMY_OUTPUT_IMAGE = Image.open('./test_data/out.jpg')
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# create an instance for the ml queue for handling the inference at the backend
+#mlq = MLQ(q_name='pose_transfer', redis_host='localhost', redis_port=6379, redis_db=0)
+#
+#CALLBACK_URL = 'http://localhost:3000/callback'
+#
+
+## Routes for MLQ (GPU server)
+#@app.route('/do_transfer', methods=['POST'])
+#def do_pose_transfer():
+#    # request the backend to transfer the incoming image
+#    # but for now this is just a dummy for testing mlq
+#    assert request.json['number']
+#    job_id = mlq.post(request.json, CALLBACK_URL)
+#    return jsonify({'msg': 'Processing, check back soon.', 'job_id': job_id})
+#
+#@app.route('/status/<job_id>', methods=['GET'])
+#def get_progress(job_id):
+#    return jsonify({'msg': mlq.get_progress(job_id=job_id)})
+#
+#@app.route('/result/<job_id>', methods=['GET'])
+#def get_result(job_id):
+#    job = mlq.get_job(job_id=job_id)
+#    return jsonify({'short_result': job['short_result']})
+#
+#@app.route('/callback', methods=['GET'])
+#def train_model():
+#    success = request.args.get('success', None)
+#    job_id = request.args.get('job_id', None)
+#    short_result = request.args.get('short_result', None)
+#    print('We receied a callback! Job ID {} returned sucessful={} with short_esult{}'.format(
+#        job_id, success, short_result
+#    ))
+#    return 'ok'
 # check for allowed extensions only
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# app routes for serving the website
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -57,10 +102,6 @@ def index():
             flash(f'Image Type has to be one of {ALLOWED_EXTENSIONS}')
             return redirect(request.url)
         
-        # get the input pose id from the form data
-        # inputPose = request.form['inputPose']
-        # do remapping of the inputPose
-
         source_image = Image.open(image).convert(mode='RGB')
         img_width, img_height = source_image.size
         if img_width != 176 or img_height != 256:
@@ -69,16 +110,25 @@ def index():
         
         # generate the output image
         # output_image = pipeline(image=source_image, target_pose_map=target_pose)
-        output_image = None
+        output_image = DUMMY_OUTPUT_IMAGE
 
-        # filename = secure_filename(output_image.filename)
-        # file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        # output_image.save(file_path)
-        return render_template('index.html', output_image=output_image) 
+        # create file-object in memory to store output
+        file_obj = io.BytesIO()
+
+        # write image in file-object
+        output_image.save(file_obj, 'PNG')
+
+        # get the bytestream from the file
+        img_data = file_obj.getvalue()
+        # encode the bytestream to base64
+        img_data = base64.b64encode(img_data)
+
+        return {
+            'output_image': img_data.decode()
+        }
+
     elif request.method == 'GET':
-        print('GET request received')
-        # render some dummy output
-        pose = list(zip([49, 43, 43, 49, 49, 87, 83, 129, 121, 155, 153, 149, 151, 151, 151, 177, 179], [97, 103, 93, 111, 85, 123, 71, 123, 61, 99, 71, 107, 73, 155, 21, 85, 93]))
+        pose = CROSSED_LEG_POSE
         poses = [pose]
         return render_template('index.html', poses=poses)
     else:
