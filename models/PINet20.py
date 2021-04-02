@@ -172,19 +172,7 @@ class TransferModel(nn.Module):
 
 
     def forward(self):
-        self.input_P1 = Variable(self.input_P1_set)
-        self.input_KP1 = Variable(self.input_KP1_set)
-        self.input_SPL1 = Variable(self.input_SPL1_set)
-
-
-        self.input_P2 = Variable(self.input_P2_set)
-        self.input_KP2 = Variable(self.input_KP2_set)
-        self.input_SPL2 = Variable(self.input_SPL2_set) #bs 1 256 176
-#        print(self.input_SPL2.shape)
-        self.input_SPL1_onehot = Variable(self.input_SPL1_onehot_set)
-        self.input_SPL2_onehot = Variable(self.input_SPL2_onehot_set)
-
-
+        self.prepare_forward()
         G_input = [self.input_P1,
                    torch.cat((self.input_KP1, self.input_KP2), 1),
                   self.input_SPL1_onehot, self.input_SPL2_onehot]
@@ -231,6 +219,12 @@ class TransferModel(nn.Module):
                    self.input_SPL1_onehot, self.input_SPL2_onehot]
         self.fake_p2, self.fake_parse = self.netG(G_input)
 
+    def validate(self):
+        # forward
+        self.forward()
+        # calculate losses
+        self.backward_G()
+        self.backward_D()
 
     def infer(self, source_image, source_pose, target_pose, source_segmentation_onehot):
         G_input = [
@@ -257,7 +251,8 @@ class TransferModel(nn.Module):
         # Combined loss
         loss_D = (loss_D_real + loss_D_fake) * 0.5
         # backward
-        loss_D.backward()
+        if self.isTrain:
+            loss_D.backward()
         return loss_D, loss_D_real, loss_D_fake
 
     def backward_D(self):
@@ -295,7 +290,8 @@ class TransferModel(nn.Module):
             self.loss_cycle = self.criterion_cycle(fake_P1, self.input_P1) * self.opt.lambda_cycle
 
         self.loss_mask =  self.loss_G_L1 + self.loss_G_GAN + self.maskloss1 + self.loss_cycle
-        self.loss_mask.backward()
+        if self.isTrain:
+            self.loss_mask.backward()
 
     def backward_parsing_G(self):
         mask = self.input_SPL2.squeeze(1).long()

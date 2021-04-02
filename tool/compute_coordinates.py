@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import os
 from argparse import Namespace
-from pipeline import IMAGE_SIZE
 from typing import List, Tuple
 
 import pkg_resources
@@ -29,7 +28,7 @@ DEFAULT_ARGS = Namespace(
 
 def transform_preds(p):
     # rotate -90 deg and scale to image dimensions
-    p[..., 1] = (INPUT_SIZE - 1 - p[..., 1]*SCALE_FACTOR) * IMAGE_SIZE[0] // INPUT_SIZE[1]
+    p[..., 1] = (INPUT_SIZE[1] - 1 - p[..., 1]*SCALE_FACTOR) * IMAGE_SIZE[0] // INPUT_SIZE[1]
     p[..., 0] = p[..., 0] * SCALE_FACTOR * IMAGE_SIZE[1] // INPUT_SIZE[0]
 
 class PoseEstimator:

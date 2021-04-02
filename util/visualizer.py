@@ -122,6 +122,21 @@ class Visualizer():
                 'ylabel': 'loss'},
             win=self.display_id)
 
+    def plot_validation_errors(self, epoch, errors):
+        if not hasattr(self, 'val_plot_data'):
+            self.val_plot_data = {'X': [], 'Y': [], 'legend': list(errors.keys())}
+        self.val_plot_data['X'].append(epoch)
+        self.val_plot_data['Y'].append(list(errors.values()))
+        self.vis.line(
+            X=np.stack([np.array(self.val_plot_data['X'])] * len(self.val_plot_data['legend']), 1),
+            Y=np.array(self.val_plot_data['Y']),
+            opts={
+                'title': self.name + ' validation loss over time',
+                'legend': self.plot_data['legend'],
+                'xlabel': 'epoch',
+                'ylabel': 'loss'},
+            win=self.display_id+1010)
+
     # errors: same format as |errors| of plotCurrentErrors
     def print_current_errors(self, epoch, i, errors, t):
         message = '(epoch: %d, iters: %d, time: %.3f) ' % (epoch, i, t)

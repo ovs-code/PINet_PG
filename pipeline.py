@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import math
+import os
+
+import cv2
 import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms
+from torchvision.transforms.transforms import ToTensor
 
 from models.PINet20 import TransferModel, create_model
 from options.infer_options import InferOptions
@@ -13,7 +18,6 @@ from util import util
 
 IMAGE_SIZE = (256, 176)
 
-
 class InferencePipeline:
     def __init__(self, pose_estimator, pinet: TransferModel, segmentator, opt):
         """Initialize the pipeline with already loaded models."""
@@ -21,12 +25,15 @@ class InferencePipeline:
         self.pinet = pinet
         self.segmentator = segmentator
         self.opt = opt
-        self.normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
 
     @classmethod
     def from_opts(cls, opt) -> InferencePipeline:
         """Load all trained models required from the locations indicated in opt."""
-        TEST_SEG_PATH = 'test_data/testSPL2/randomphoto_small.png'
+        TEST_SEG_PATH = 'test_data/testSPL2/fashionMENDenimid0000537801_7additional.png'
 
         pinet = create_model(opt).eval()
         args = DEFAULT_ARGS
@@ -36,20 +43,17 @@ class InferencePipeline:
         return cls(pose_estimator, pinet, segmentator, opt)
 
     def __call__(self, image: Image, target_pose_map: torch.Tensor) -> Image:
-        # convert Image to Tensor
-        tensor = transforms.functional.to_tensor(image)
-
         # get pose
-        pose = self.pose_estimator.infer(tensor)
+        pose = self.pose_estimator.infer(image)
 
         # convert to pose map
         pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))
 
         # get segmentation map ...
-        spl_onehot = self.segmentator.get_segmap(tensor).unsqueeze(0)
+        spl_onehot = self.segmentator.get_segmap(image).unsqueeze(0)
 
         # run PINet
-        image_norm = self.normalize(tensor).unsqueeze(0)
+        image_norm = self.transform(image).unsqueeze(0)
 
         if self.opt.gpu_ids:
             # move data to GPU
@@ -58,10 +62,56 @@ class InferencePipeline:
             target_pose_map = target_pose_map.cuda(device)
             image_norm = image_norm.cuda(device)
             spl_onehot = spl_onehot.cuda(device)
-        # TODO: add torch.no_grad
-        output_image, output_segmentation = self.pinet.infer(
-            image_norm, pose_map, target_pose_map, spl_onehot)
+        with torch.no_grad():
+            output_image, _ = self.pinet.infer(
+                image_norm,
+                pose_map,
+                target_pose_map,
+                spl_onehot
+            )
         return Image.fromarray(util.tensor2im(output_image))
+
+    def render_video(self, image: Image, target_poses: str, batch_size=64):
+        """
+        Example usage:
+        >>> images = list(pipeline.render_video(...))
+        >>> images[0].save(file_object, 'GIF', save_all=True, append_images=images[1:], duration=33, loop=0)
+        """
+        # get pose estimation
+        pose = self.pose_estimator.infer(image)
+        pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))
+        # get semantic segmentation
+        spl_onehot = self.segmentator.get_segmap(image).unsqueeze(0)
+        # transform image
+        image_norm = self.transform(image).unsqueeze(0)
+        # read target poses
+        pose_files = [os.path.join(target_poses, fname) for fname in sorted(os.listdir(target_poses))]
+        target_poses = torch.cat([reorder_pose(np.load(file)) for file in pose_files])
+        # create batch(es) of the same image, source pose, segmentation and different target poses
+        if self.opt.gpu_ids:
+            device = self.opt.gpu_ids[0]
+            pose_map = pose_map.cuda(device)
+            target_poses = target_poses.cuda(device)
+            image_norm = image_norm.cuda(device)
+            spl_onehot = spl_onehot.cuda(device)
+
+        pose_map = pose_map.expand(batch_size, -1, -1, -1)
+        spl_onehot = spl_onehot.expand(batch_size, -1, -1, -1)
+        image_norm = image_norm.expand(batch_size, -1, -1, -1)
+        with torch.no_grad():
+            nframes = target_poses.size(0)
+            nbatches = math.ceil(nframes / batch_size)
+            for i in range(nbatches):
+                nel = min(batch_size, nframes-i*batch_size)
+                output_images, _ = self.pinet.infer(
+                    image_norm[:nel],
+                    pose_map[:nel],
+                    target_poses[i*batch_size : (i+1)*batch_size],
+                    spl_onehot[:nel]
+                )
+                yield from map(util.tensor2im, output_images)
+
+
 
 
 class DummySegmentationModel:
@@ -87,15 +137,22 @@ class DummySegmentationModel:
 
 
 if __name__ == '__main__':
-    SOURCE_IMAGE_PATH = 'test_data/test/Oskar_pad_small.jpg'
-    TARGET_POSE_PATH = 'test_data/testK/randomphoto_small.jpg.npy'
+    SOURCE_IMAGE_PATH = 'test_data/test/fashionMENDenimid0000537801_7additional.jpg'
+    TARGET_POSE_PATH = 'test_data/testK/fashionMENDenimid0000537801_7additional.jpg.npy'
     OUPUT_PATH = 'test_data/out.jpg'
 
     opt = InferOptions().parse()
     pipeline = InferencePipeline.from_opts(opt)
 
     source_image = Image.open(SOURCE_IMAGE_PATH)
-    target_pose = load_pose_from_file(TARGET_POSE_PATH)
-    output_image = pipeline(source_image, target_pose)
+    # target_pose = load_pose_from_file(TARGET_POSE_PATH)
+    # output_image = pipeline(source_image, target_pose)
+    writer = cv2.VideoWriter('test_data/out.mp4', cv2.VideoWriter_fourcc(*'MJPG'), 30, IMAGE_SIZE[::-1])
+    import time
+    st = time.time()
+    for frame in pipeline.render_video(source_image, 'test_data/seq/'):
+        writer.write(frame[..., [2, 1, 0]])
+    writer.release()
+    print(time.time() - st)
 
-    output_image.save(OUPUT_PATH)
+    # output_image.save(OUPUT_PATH)
