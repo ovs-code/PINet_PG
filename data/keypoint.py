@@ -30,12 +30,12 @@ class KeyDataset(data.Dataset):
         self.dir_SL = os.path.join(opt.dataroot, opt.phase + 'SPL2') #spl2 12 full #spl3 10 full
         self.class_num = 12
 
-        self.get_datapairs(opt.pairLst)
+        self.get_datapairs(os.path.join(opt.dataroot, f'fasion-resize-pairs-{opt.phase}.csv'))
         self.transform = self.get_transform(opt)
 
     def get_datapairs(self, pairLst):
         '''
-        get the data pairs from csv file 
+        get the data pairs from csv file
         '''
         pairs_file = pd.read_csv(pairLst)
         self.size = len(pairs_file)
@@ -72,7 +72,7 @@ class KeyDataset(data.Dataset):
     def __getitem__(self, index):
 
         ###### crop all the input to 256*176
-        
+
         if self.opt.phase == 'train':
             index = random.randint(0, self.size-1)
 
@@ -113,15 +113,15 @@ class KeyDataset(data.Dataset):
             SPL1_img = SPL1_img.crop(regions)
         SPL2_img = Image.open(SPL2_path)
         if SPL2_img.size[0]==256:
-            SPL2_img = SPL2_img.crop(regions)        
+            SPL2_img = SPL2_img.crop(regions)
 
 
-        
-        
+
+
 
         #print('new',(np.array(KP1_img)).shape)
 
-       
+
 
         if self.opt.phase == 'train' and self.opt.use_flip:
             flip_random = random.uniform(0, 1)
@@ -138,16 +138,16 @@ class KeyDataset(data.Dataset):
                 SPL1_img = SPL1_img.transpose(Image.FLIP_LEFT_RIGHT)
                 SPL2_img = SPL2_img.transpose(Image.FLIP_LEFT_RIGHT)
 
-        
+
 
 
         KP1 = torch.from_numpy(KP1_img).float() #h, w, c
         KP1 = KP1.transpose(2, 0) #c,w,h
-        KP1 = KP1.transpose(2, 1) #c,h,w 
+        KP1 = KP1.transpose(2, 1) #c,h,w
 
         KP2 = torch.from_numpy(KP2_img).float()
         KP2 = KP2.transpose(2, 0) #c,w,h
-        KP2 = KP2.transpose(2, 1) #c,h,w 
+        KP2 = KP2.transpose(2, 1) #c,h,w
 
         P1 = self.transform(P1_img)
         P2 = self.transform(P2_img)
@@ -157,7 +157,7 @@ class KeyDataset(data.Dataset):
        # print(SPL2_img.shape,SPL1_img.shape)
         num_class = self.class_num
         tmp = torch.from_numpy(SPL2_img).view( -1).long()
-        ones = torch.sparse.torch.eye(num_class) 
+        ones = torch.sparse.torch.eye(num_class)
         ones = ones.index_select(0, tmp)
         SPL2_onehot = ones.view([h,w, num_class])
         #print(SPL2_onehot.shape)
@@ -173,7 +173,7 @@ class KeyDataset(data.Dataset):
 
         SPL1 = torch.from_numpy(SPL1_img).long()
         SPL2 = torch.from_numpy(SPL2_img).long()
-        return {'P1': P1, 'KP1': KP1, 'P2': P2, 'KP2': KP2, 
+        return {'P1': P1, 'KP1': KP1, 'P2': P2, 'KP2': KP2,
                 'SPL1': SPL1, 'SPL2': SPL2,'SPL1_onehot':SPL1_onehot,'SPL2_onehot':SPL2_onehot,
                 'P1_path': P1_name, 'P2_path': P2_name}
 
@@ -184,4 +184,4 @@ class KeyDataset(data.Dataset):
             return self.size
 
     def name(self):
-        return 'KeyDataset'      
+        return 'KeyDataset'

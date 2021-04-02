@@ -43,7 +43,6 @@ class BaseOptions():
         self.parser.add_argument('--P_input_nc', type=int, default=3, help='# of input image channels')
         self.parser.add_argument('--BP_input_nc', type=int, default=1, help='# of input image channels')
         self.parser.add_argument('--padding_type', type=str, default='reflect', help='# of input image channels')
-        self.parser.add_argument('--pairLst', type=str, default='./keypoint_data/market-pairs-train.csv', help='market pairs')
 
         self.parser.add_argument('--with_D_PP', type=int, default=1, help='use D to judge P and P is pair or not')
         self.parser.add_argument('--with_D_PB', type=int, default=1, help='use D to judge P and B is pair or not')
