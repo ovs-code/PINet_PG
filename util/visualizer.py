@@ -125,9 +125,8 @@ class Visualizer():
     def plot_validation_errors(self, epoch, errors):
         if not hasattr(self, 'val_plot_data'):
             self.val_plot_data = {'X': [], 'Y': [], 'legend': list(errors.keys())}
-        self.plot_data['X'].append(epoch)
-        self.plot_data['Y'].append(errors.values())
-
+        self.val_plot_data['X'].append(epoch)
+        self.val_plot_data['Y'].append(list(errors.values()))
         self.vis.line(
             X=np.stack([np.array(self.val_plot_data['X'])] * len(self.val_plot_data['legend']), 1),
             Y=np.array(self.val_plot_data['Y']),

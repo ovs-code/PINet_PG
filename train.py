@@ -75,7 +75,7 @@ for epoch in range(opt.epoch_count, opt.sepiter + opt.niter + opt.niter_decay + 
     print('End of epoch %d / %d \t Time Taken: %d sec' %
           (epoch, opt.sepiter + opt.niter + opt.niter_decay, time.time() - epoch_start_time))
 
-    if i >= opt.sepiter:
+    if epoch > opt.sepiter:
         model.update_learning_rate()
 
     # TODO: validate
@@ -87,7 +87,11 @@ for epoch in range(opt.epoch_count, opt.sepiter + opt.niter + opt.niter_decay + 
         with torch.no_grad():
             model.validate()
 
-        errors = {model.get_current_errors()}
+        errors = model.get_current_errors()
         for k in errors:
-            val_errors[k] = val_errors.get(k, []) + [errors[k].item()]
-    {k: sum(v)/len(v) for k, v in val_errors.items()}
+            try:
+                val_errors[k] = val_errors.get(k, []) + [errors[k].item()]
+            except AttributeError:
+                val_errors[k] = val_errors.get(k, []) + [errors[k]]
+    visualizer.plot_validation_errors(epoch, {k: sum(v)/len(v) for k, v in val_errors.items()})
+    # TODO: print/log validation losses

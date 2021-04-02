@@ -180,7 +180,7 @@ class KeyDataset(data.Dataset):
     def __len__(self):
         if self.opt.phase == 'train':
             return 4000
-        elif self.opt.phase == 'test':
+        elif self.opt.phase in ('test', 'val'):
             return self.size
 
     def name(self):
