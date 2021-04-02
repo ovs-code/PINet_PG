@@ -136,6 +136,10 @@ class Visualizer():
                 'xlabel': 'epoch',
                 'ylabel': 'loss'},
             win=self.display_id+1010)
+        with open(self.log_name, "a") as log_file:
+            print('Validation Loss: %s' % errors)
+            log_file.write('Validation Loss: %s\n' % errors)
+    
 
     # errors: same format as |errors| of plotCurrentErrors
     def print_current_errors(self, epoch, i, errors, t):
