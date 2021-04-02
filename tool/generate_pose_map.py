@@ -28,7 +28,7 @@ def cords_to_map(cords, img_size, sigma=6):
     return result
 
 
-def compute_pose(image_dir, annotations_file, savePath, sigma=6):
+def compute_pose(annotations_file, savePath, sigma=6):
     annotations_file = pd.read_csv(annotations_file, sep=':')
     annotations_file = annotations_file.set_index('name')
     image_size = (256, 176)
@@ -48,7 +48,6 @@ def compute_pose(image_dir, annotations_file, savePath, sigma=6):
 
 if __name__ == '__main__':
     # fix PATH
-    img_dir = 'test_data'  # raw image path
-    annotations_file = 'fashion_data/fasion-resize-annotation-test.csv'  # pose annotation path
-    save_path = 'fashion_data/testK'  # path to store pose maps
-    compute_pose(img_dir, annotations_file, save_path)
+    import sys
+    annotations_file, save_path = sys.argv[1:]
+    compute_pose(annotations_file, save_path)

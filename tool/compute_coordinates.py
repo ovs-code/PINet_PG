@@ -27,15 +27,6 @@ DEFAULT_ARGS = Namespace(
     prevModelDir='.'
 )
 
-
-def pad_image(image: torch.Tensor, target_size: Tuple[int, int], color='white') -> Image:
-    "Pad the input image to the left and bottom"
-    padded = torch.ones((3, 288, 384))
-    c, h, w = image.shape
-    padded[:c, :h, :w] = image
-    return padded
-
-
 def transform_preds(p):
     # rotate -90 deg and scale to image dimensions
     p[..., 1] = (INPUT_SIZE - 1 - p[..., 1]*SCALE_FACTOR) * IMAGE_SIZE[0] // INPUT_SIZE[1]
@@ -89,8 +80,8 @@ class PoseEstimator:
 
 if __name__ == '__main__':
     # most important parameters
-    input_folder = './fashion_data/test/'
-    output_path = './fashion_data/fasion-resize-annotation-test.csv'
+    import sys
+    input_folder, output_path = sys.argv[1:]
     pose_estimator = 'assets/pretrains/pose_hrnet_w48_256x192.pth'
 
     batch_size = 128
