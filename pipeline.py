@@ -7,12 +7,12 @@ import cv2
 import numpy as np
 import torch
 from PIL import Image
-from torchvision import transforms
-from torchvision.transforms.transforms import ToTensor
+from torchvision import transforms, io
+from torchvision.io import video
 
 from models.PINet20 import TransferModel, create_model
 from options.infer_options import InferOptions
-from tool import cords_to_map, load_pose_from_file, reorder_pose
+from tool import cords_to_map, reorder_pose
 from tool.compute_coordinates import DEFAULT_ARGS, PoseEstimator
 from util import util
 
@@ -71,12 +71,7 @@ class InferencePipeline:
             )
         return Image.fromarray(util.tensor2im(output_image))
 
-    def render_video(self, image: Image, target_poses: str, batch_size=64):
-        """
-        Example usage:
-        >>> images = list(pipeline.render_video(...))
-        >>> images[0].save(file_object, 'GIF', save_all=True, append_images=images[1:], duration=33, loop=0)
-        """
+    def render_video(self, image: Image, target_poses: str, batch_size=16):
         # get pose estimation
         pose = self.pose_estimator.infer(image)
         pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))
@@ -103,13 +98,13 @@ class InferencePipeline:
             nbatches = math.ceil(nframes / batch_size)
             for i in range(nbatches):
                 nel = min(batch_size, nframes-i*batch_size)
-                output_images, _ = self.pinet.infer(
+                output_images = self.pinet.infer(
                     image_norm[:nel],
                     pose_map[:nel],
                     target_poses[i*batch_size : (i+1)*batch_size],
                     spl_onehot[:nel]
-                )
-                yield from map(util.tensor2im, output_images)
+                )[0].detach().cpu()
+                yield output_images
 
 
 
@@ -137,6 +132,9 @@ class DummySegmentationModel:
 
 
 if __name__ == '__main__':
+
+    torch.backends.cudnn.benchmark = True
+
     SOURCE_IMAGE_PATH = 'test_data/test/fashionMENDenimid0000537801_7additional.jpg'
     TARGET_POSE_PATH = 'test_data/testK/fashionMENDenimid0000537801_7additional.jpg.npy'
     OUPUT_PATH = 'test_data/out.jpg'
@@ -144,15 +142,27 @@ if __name__ == '__main__':
     opt = InferOptions().parse()
     pipeline = InferencePipeline.from_opts(opt)
 
-    source_image = Image.open(SOURCE_IMAGE_PATH)
+
     # target_pose = load_pose_from_file(TARGET_POSE_PATH)
     # output_image = pipeline(source_image, target_pose)
-    writer = cv2.VideoWriter('test_data/out.mp4', cv2.VideoWriter_fourcc(*'MJPG'), 30, IMAGE_SIZE[::-1])
     import time
     st = time.time()
-    for frame in pipeline.render_video(source_image, 'test_data/seq/'):
-        writer.write(frame[..., [2, 1, 0]])
-    writer.release()
+    videos = [io.read_video('test_data/seq.mp4', pts_unit='sec')[0]]
+    images = [torch.zeros_like(videos[0], dtype=torch.uint8)]
+    for person in ['fashionMENDenimid0000537801_7additional']:
+        source_image = Image.open(f'test_data/test/{person}.jpg')
+        pipeline.segmentator.path = f'test_data/testSPL2/{person}.png'
+        frames = torch.cat(list(pipeline.render_video(source_image, 'test_data/seq/')))
+        frames = frames.float()
+        frames = torch.movedim(frames, 1, 3)
+        frames = (frames + 1) / 2.0 * 255.0
+        videos.append(frames.byte())
+        source_image_tensor = torch.from_numpy(np.array(source_image)).unsqueeze(0).expand(frames.size())
+        images.append(source_image_tensor)
+        print(time.time() - st)
+
+    comp_video = torch.cat([torch.cat(part, dim=2) for part in (images, videos)], dim=1)
+    io.write_video('test_data/out.mp4', comp_video, fps=30)
     print(time.time() - st)
 
     # output_image.save(OUPUT_PATH)
