@@ -11,6 +11,7 @@ from torchvision import transforms, io
 from torchvision.io import video
 
 from models.PINet20 import TransferModel, create_model
+import models.parsing 
 from options.infer_options import InferOptions
 from tool import cords_to_map, reorder_pose
 from tool.compute_coordinates import DEFAULT_ARGS, PoseEstimator
@@ -33,13 +34,11 @@ class InferencePipeline:
     @classmethod
     def from_opts(cls, opt) -> InferencePipeline:
         """Load all trained models required from the locations indicated in opt."""
-        TEST_SEG_PATH = 'test_data/testSPL2/fashionMENDenimid0000537801_7additional.png'
-
         pinet = create_model(opt).eval()
         args = DEFAULT_ARGS
         args.opts = ['TEST.MODEL_FILE', opt.pose_estimator]
         pose_estimator = PoseEstimator(args, opt.gpu_ids != [])
-        segmentator = DummySegmentationModel(TEST_SEG_PATH)
+        segmentator = SegmentationModel(opt.segmentation_model, bool(opt.gpu_ids))
         return cls(pose_estimator, pinet, segmentator, opt)
 
     def __call__(self, image: Image, target_pose_map: torch.Tensor) -> Image:
@@ -107,48 +106,33 @@ class InferencePipeline:
                 yield (output_images.detach().cpu(), output_segmentations.detach().cpu())
 
 
-class DummySegmentationModel:
-    def __init__(self, path):
-        self.path = path
+class SegmentationModel:
+    def __init__(self, path, use_cuda=True):
+        self.use_cuda = use_cuda
+        self.model = models.parsing.load_model(path, use_cuda=self.use_cuda)
 
-    def get_segmap(self, *args):
+    def get_segmap(self, image):
+        # TODO: Improve performance by not doing torch -> numpy -> torch
+        SPL_img = models.parsing.infer(self.model, image, self.use_cuda)
         num_class = 12
-        SPL_path = self.path
-        SPL_img = Image.open(SPL_path)
-        if np.array(SPL_img).shape[1] == 256:
-            SPL_img = SPL_img.crop((40, 0, 216, 256))
-        SPL_img = SPL_img.transpose(Image.FLIP_LEFT_RIGHT)
-        SPL_img = np.expand_dims(np.array(SPL_img), 0)
         _, h, w = SPL_img.shape
         tmp = torch.from_numpy(SPL_img).view(-1).long()
         ones = torch.sparse.torch.eye(num_class)
         ones = ones.index_select(0, tmp)
         SPL_onehot = ones.view([h, w, num_class])
         SPL_onehot = SPL_onehot.permute(2, 0, 1)
-        # SPL = torch.from_numpy(SPL_img).long()
         return SPL_onehot
 
 
 if __name__ == '__main__':
-
-    SOURCE_IMAGE_PATH = 'test_data/test/fashionMENDenimid0000537801_7additional.jpg'
-    TARGET_POSE_PATH = 'test_data/testK/fashionMENDenimid0000537801_7additional.jpg.npy'
-    OUPUT_PATH = 'test_data/out.jpg'
-
+    with open('test_data/test.lst') as f:
+        persons = [line.strip() for line in f]
     opt = InferOptions().parse()
-    print(opt)
-    exit()
     pipeline = InferencePipeline.from_opts(opt)
-
-
-    # target_pose = load_pose_from_file(TARGET_POSE_PATH)
-    # output_image = pipeline(source_image, target_pose)
-    import time
-    st = time.time()
     videos = [io.read_video('test_data/seq.mp4', pts_unit='sec')[0]]
     segs = [torch.zeros_like(videos[0], dtype=torch.uint8)]
     images = [torch.zeros_like(videos[0], dtype=torch.uint8)]
-    for person in ['fashionMENDenimid0000537801_7additional']:
+    for person in persons:
         source_image = Image.open(f'test_data/test/{person}.jpg')
         pipeline.segmentator.path = f'test_data/testSPL2/{person}.png'
         frames, segmentations = zip(*pipeline.render_video(source_image, 'test_data/seq/'))
@@ -162,10 +146,8 @@ if __name__ == '__main__':
         segs.append(segmentations.byte())
         source_image_tensor = torch.from_numpy(np.array(source_image)).unsqueeze(0).expand(frames.size())
         images.append(source_image_tensor)
-        print(time.time() - st)
 
     comp_video = torch.cat([torch.cat(part, dim=2) for part in (images, segs, videos)], dim=1)
     io.write_video('test_data/out.mp4', comp_video, fps=30)
-    print(time.time() - st)
 
     # output_image.save(OUPUT_PATH)

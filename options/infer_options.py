@@ -34,16 +34,17 @@ class InferOptions():
         self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         self.parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
-        self.parser.add_argument("--pose_estimator", default='pose_estimator.h5', help='Pretrained model for cao pose estimator')
+        self.parser.add_argument('--pose_estimator', default='assets/pretrains/pose_hrnet_w48_256x192.pth', help='Pretrained model for cao pose estimator')
+        self.parser.add_argument('--segmentation_model', default='assets/pretrains/CIHP_trained.pth', help='Pretrained model for cao pose estimator')
 
 
 
         self.initialized = True
 
-    def parse(self):
+    def parse(self, *args):
         if not self.initialized:
             self.initialize()
-        self.opt = self.parser.parse_args()
+        self.opt = self.parser.parse_args(*args)
         self.opt.model = 'PInet'
         self.opt.isTrain = False
 
