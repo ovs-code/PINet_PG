@@ -10,37 +10,23 @@ from hrnet_pose import models
 import pkg_resources
 from argparse import Namespace
 
+from pipeline import InferencePipeline
+from options.infer_options import InferOptions
+
+from PIL import Image
+from io import BytesIO
+import base64
+
 mlq = MLQ('pose_transfer', 'localhost', 6379, 0)
 
-# Create the DL models
-# Keypoint model
-args = Namespace(
-    cfg=pkg_resources.resource_filename(
-        'hrnet_pose', 'yaml/coco/hrnet/w48_256x192_adam_lr1e-3.yaml'
-    ),
-    dataDir='../..',
-    logDir='../..',
-    modelDir='../..',
-    opts=['TEST.MODEL_FILE', 'pose_hrnet_w48_256x192.pth'],
-    prevModelDir='../..'
-)
-update_config(cfg, args)
-
-KEYPOINT_MODEL = models.pose_hrnet.get_pose_net(cfg, False)
-KEYPOINT_MODEL.load_state_dict(torch.load(cfg.TEST.MODEL_FILE, map_location=torch.device('cpu')), strict=False)
-KEYPOINT_MODEL.eval()
-
-# Segmentation model
-SEGMENTATION_MODEL = None
-
-# Transfer model
-TRANSFER_MODEL = None
+# Create the Inference Pipeline instance
+pip_opts = InferOptions().parse(['--name', 'fashion_PInet_cycle'])
+INFERENCE_PIPELINE = InferencePipeline.from_opts(pip_opts)
 
 def inference(input_dict, *args):
     """
     Function for the actual inference
     """
-    print('Inside inference (at the worker)')
     # unpack the input
     source_image = input_dict['source_image']
     target_pose = input_dict['target_pose']
@@ -52,8 +38,11 @@ def inference(input_dict, *args):
     # source_segmentation = SEGMENTATION_MODEL(source_image)
 
     # do the final transfer
-    # target_image = TRANSFER_MODEL.infer(source_image, source_pose, target_pose, source_segmentation)
-    target_image = source_image
+    source_image = Image.open(BytesIO(base64.b64decode(source_image)))
+    target_image = INFERENCE_PIPELINE(source_image, target_pose)
+    target_image_file = io.BytesIO()
+    target_image.save(target_image_file, format="PNG")
+    target_image = base64.b64encode(target_image_file.getvalue()).decode()
     return {'target_image': target_image}
 
 def main():
