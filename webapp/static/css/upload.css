@@ -27,33 +27,6 @@
    background-color: rgb(255, 174, 0);
 }
 
-.store-page-product .steps,
-.store-page-product-customer .steps,
-.store-page-customer .steps,
-.store-page-confirm .steps,
-.store-page-complete .steps {
-   display: block; }
-
-.store-page-product .step1,
-.store-page-product-customer .step1,
-.store-page-customer .step1,
-.store-page-confirm .step2,
-.store-page-complete .step3 {
-   font-weight: bold;
-   color: #666666; }
-
-.store-page-product .step1 .snumber,
-.store-page-product-customer .step1 .snumber,
-.store-page-customer .step1 .snumber,
-.store-page-confirm .step2 .snumber,
-.store-page-complete .step3 .snumber {
-   background-color: #666666;
-   color: #ffffff; }
-
-.checkmark1, .checkmark2 {
-   display: none; }
-
-.store-page-confirm .checkmark1,
-.store-page-complete .checkmark1,
-.store-page-complete .checkmark2 {
-   display: inline; }
+h2 {
+   text-align: center;
+}

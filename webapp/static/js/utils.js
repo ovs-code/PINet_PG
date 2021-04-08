@@ -28,7 +28,7 @@ function drawPose(canvas, pose){
             if (limb[0] === MISSING_VALUE | limb[1] === MISSING_VALUE) {
                 return;
             }
-            ctx.fillRect(limb[1], limb[0], 5, 5);
+            ctx.fillRect(limb[1]-2, limb[0]-2, 3, 3);
         });
     }
 }

@@ -9,18 +9,21 @@
 {% endblock %}
 
 {% block progress %}
+<!--
 <div class="steps row">
   <div class="step1 col-4"><div class="snumber">1</div>Upload Image</div>
   <div class="step2 col-4"><div class="snumber">2</div>Select Pose</div>
   <div class="step3 col-4"><div class="snumber">3</div>Transfer</div>
 </div>
+-->
 {% endblock %}
 
 {% block content %}
 <div class="card">
 	<div class="card-body">
 		<div>Hello and welcome to the PoseTransfer webapp. In three simple steps you can create your tranfered poses. No matter if you want to do a handstand or some fancy yoga poses. Just <strong>upload your image, select the pose and transform</strong>.</div>
-		<h2>Upload Image</h2>
+		<hr/>
+		<h2 id="upload-heading">Upload Image</h2>
 		<div>Upload an image file or take a photo with your camera and crop it.</div>
 		<div><strong>Hint:</strong> The size of the crop is fixed to 176x276.</div>
 		<div id="alert-box"></div>
@@ -28,11 +31,13 @@
 		<div id="image-box" class="mb-3"></div>
 		<div id="image-form" class="custom-file">
 			<input id="id_file" type="file" name="image" class="custom-file-input">
-			<label class="custom-file-label" for="id_file">Upload Image</label>
+			<label class="custom-file-label" for="id_file">Click here to upload image</label>
 		</div>
-		<button id="confirm-btn" class="btn btn-primary mt-3 not-visible">Crop your image</button>
-
-		<h2>Select Target Pose</h2>
+		<div class="text-center">
+			<button id="confirm-btn" class="btn btn-primary mt-3" style="display: none;">Crop your image</button>
+		</div>
+		<hr/>
+		<h2 id="pose-heading">Select Target Pose</h2>
 		<div id="canvasBox" class="row hiddenradio">
 			{% for pose in poses %}
 			<div class="inputPoseContainer col-xl-2 col-md-4 col-6">
@@ -43,16 +48,14 @@
 			</div>
 			{% endfor %}
 		</div>
-		<button id="submit-btn" class="btn btn-primary mt-3">Transform image</button>
-		<div id="output-container" class="row" style="display: none;">
-			<div class="col-7">
-				<h2>Output Image</h2>
-				<div class="scan">
-					<img class="img-fluid" id="inputImage" src="{{ output_image }}" />
-					<canvas id="resultsCanvas"></canvas>
-				</div>
-			</div>
+		<div class="text-center">
+			<button id="submit-btn" class="btn btn-primary mt-3" type="button">Transform image</button>
 		</div>
-	</div>
+		<hr/>
+		<div id="output-container" class="row" style="display: none;">
+			<h2>Output Image</h2>
+			<div id="target-image"></div>
+		</div>
+		</div>
 </div>
 {% endblock %}
