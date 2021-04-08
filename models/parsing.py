@@ -1818,7 +1818,7 @@ class DeepLabv3_plus(nn.Module):
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
         x5 = self.global_avg_pool(x)
-        x5 = F.upsample(x5, size=x4.size()[
+        x5 = F.interpolate(x5, size=x4.size()[
                         2:], mode='bilinear', align_corners=True)
 
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
@@ -1827,7 +1827,7 @@ class DeepLabv3_plus(nn.Module):
         x = self.concat_projection_bn1(x)
         x = self.relu(x)
         # print(x.size())
-        x = F.upsample(x, size=low_level_features.size()[
+        x = F.interpolate(x, size=low_level_features.size()[
                        2:], mode='bilinear', align_corners=True)
 
         low_level_features = self.feature_projection_conv1(low_level_features)
@@ -1838,7 +1838,7 @@ class DeepLabv3_plus(nn.Module):
         x = torch.cat((x, low_level_features), dim=1)
         x = self.decoder(x)
         x = self.semantic(x)
-        x = F.upsample(x, size=input.size()[
+        x = F.interpolate(x, size=input.size()[
                        2:], mode='bilinear', align_corners=True)
 
         return x
@@ -1994,7 +1994,7 @@ class DeepLabv3_plus_multi_set(nn.Module):
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
         x5 = self.global_avg_pool(x)
-        x5 = F.upsample(x5, size=x4.size()[
+        x5 = F.interpolate(x5, size=x4.size()[
                         2:], mode='bilinear', align_corners=True)
 
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
@@ -2003,7 +2003,7 @@ class DeepLabv3_plus_multi_set(nn.Module):
         x = self.concat_projection_bn1(x)
         x = self.relu(x)
         # print(x.size())
-        x = F.upsample(x, size=low_level_features.size()[
+        x = F.interpolate(x, size=low_level_features.size()[
                        2:], mode='bilinear', align_corners=True)
 
         low_level_features = self.feature_projection_conv1(low_level_features)
@@ -2014,21 +2014,21 @@ class DeepLabv3_plus_multi_set(nn.Module):
         x = torch.cat((x, low_level_features), dim=1)
         x = self.decoder(x)
         # x = self.semantic(x)
-        # x = F.upsample(x, size=input.size()[2:], mode='bilinear', align_corners=True)
+        # x = F.interpolate(x, size=input.size()[2:], mode='bilinear', align_corners=True)
 
         if input_cate == 0:
             x = self.semantic_aux_cihp(x)
-            x = F.upsample(x, size=input.size()[
+            x = F.interpolate(x, size=input.size()[
                            2:], mode='bilinear', align_corners=True)
 
         elif input_cate == 1:
             x = self.semantic_aux_pascal(x)
-            x = F.upsample(x, size=input.size()[
+            x = F.interpolate(x, size=input.size()[
                            2:], mode='bilinear', align_corners=True)
 
         else:
             x = self.semantic_aux_atr(x)
-            x = F.upsample(x, size=input.size()[
+            x = F.interpolate(x, size=input.size()[
                            2:], mode='bilinear', align_corners=True)
 
         return x
@@ -2176,7 +2176,7 @@ class GrapyNet(DeepLabv3_plus):
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
         x5 = self.global_avg_pool(x)
-        x5 = F.upsample(x5, size=x4.size()[
+        x5 = F.interpolate(x5, size=x4.size()[
                         2:], mode='bilinear', align_corners=True)
 
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
@@ -2185,7 +2185,7 @@ class GrapyNet(DeepLabv3_plus):
         x = self.concat_projection_bn1(x)
         x = self.relu(x)
 
-        x = F.upsample(x, size=low_level_features.size()[
+        x = F.interpolate(x, size=low_level_features.size()[
                        2:], mode='bilinear', align_corners=True)
 
         low_level_features = self.feature_projection_conv1(low_level_features)
@@ -2201,9 +2201,9 @@ class GrapyNet(DeepLabv3_plus):
         x = self.sem2(x)
 
         # this is for the final upsampling
-        x = F.upsample(x, size=input.size()[
+        x = F.interpolate(x, size=input.size()[
                        2:], mode='bilinear', align_corners=True)
-        x_aux = F.upsample(x_aux, size=input.size()[
+        x_aux = F.interpolate(x_aux, size=input.size()[
                            2:], mode='bilinear', align_corners=True)
 
         return x, x_aux
@@ -2298,7 +2298,7 @@ class GrapyMutualLearning(DeepLabv3_plus_multi_set):
         x3 = self.aspp3(x)
         x4 = self.aspp4(x)
         x5 = self.global_avg_pool(x)
-        x5 = F.upsample(x5, size=x4.size()[
+        x5 = F.interpolate(x5, size=x4.size()[
                         2:], mode='bilinear', align_corners=True)
 
         x = torch.cat((x1, x2, x3, x4, x5), dim=1)
@@ -2307,7 +2307,7 @@ class GrapyMutualLearning(DeepLabv3_plus_multi_set):
         x = self.concat_projection_bn1(x)
         x = self.relu(x)
 
-        x = F.upsample(x, size=low_level_features.size()[
+        x = F.interpolate(x, size=low_level_features.size()[
                        2:], mode='bilinear', align_corners=True)
 
         low_level_features = self.feature_projection_conv1(low_level_features)
@@ -2323,9 +2323,9 @@ class GrapyMutualLearning(DeepLabv3_plus_multi_set):
         x = sem2(x)
 
         # this is for the final upsampling
-        x_aux = F.upsample(x_aux, size=input.size()[
+        x_aux = F.interpolate(x_aux, size=input.size()[
                            2:], mode='bilinear', align_corners=True)
-        x = F.upsample(x, size=input.size()[
+        x = F.interpolate(x, size=input.size()[
                        2:], mode='bilinear', align_corners=True)
 
         return x, x_aux
@@ -2463,7 +2463,7 @@ if __name__ == '__main__':
         if '.ipynb_checkpoints' in image_name:
             continue
         image = Image.open(os.path.join(input_folder, image_name))
-        result = infer(model, image)
+        result = infer(model, image).transpose(1, 2, 0)
         new_path = os.path.join(
             output_path, image_name.replace('.jpg', '.png'))
         cv2.imwrite(new_path, result)

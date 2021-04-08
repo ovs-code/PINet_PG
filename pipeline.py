@@ -98,15 +98,13 @@ class InferencePipeline:
             nbatches = math.ceil(nframes / batch_size)
             for i in range(nbatches):
                 nel = min(batch_size, nframes-i*batch_size)
-                output_images = self.pinet.infer(
+                output_images, output_segmentations = self.pinet.infer(
                     image_norm[:nel],
                     pose_map[:nel],
                     target_poses[i*batch_size : (i+1)*batch_size],
                     spl_onehot[:nel]
-                )[0].detach().cpu()
-                yield output_images
-
-
+                )
+                yield (output_images.detach().cpu(), output_segmentations.detach().cpu())
 
 
 class DummySegmentationModel:
@@ -133,13 +131,13 @@ class DummySegmentationModel:
 
 if __name__ == '__main__':
 
-    torch.backends.cudnn.benchmark = True
-
     SOURCE_IMAGE_PATH = 'test_data/test/fashionMENDenimid0000537801_7additional.jpg'
     TARGET_POSE_PATH = 'test_data/testK/fashionMENDenimid0000537801_7additional.jpg.npy'
     OUPUT_PATH = 'test_data/out.jpg'
 
     opt = InferOptions().parse()
+    print(opt)
+    exit()
     pipeline = InferencePipeline.from_opts(opt)
 
 
@@ -148,20 +146,25 @@ if __name__ == '__main__':
     import time
     st = time.time()
     videos = [io.read_video('test_data/seq.mp4', pts_unit='sec')[0]]
+    segs = [torch.zeros_like(videos[0], dtype=torch.uint8)]
     images = [torch.zeros_like(videos[0], dtype=torch.uint8)]
     for person in ['fashionMENDenimid0000537801_7additional']:
         source_image = Image.open(f'test_data/test/{person}.jpg')
         pipeline.segmentator.path = f'test_data/testSPL2/{person}.png'
-        frames = torch.cat(list(pipeline.render_video(source_image, 'test_data/seq/')))
+        frames, segmentations = zip(*pipeline.render_video(source_image, 'test_data/seq/'))
+        frames = torch.cat(frames)
         frames = frames.float()
         frames = torch.movedim(frames, 1, 3)
         frames = (frames + 1) / 2.0 * 255.0
         videos.append(frames.byte())
+        segmentations = torch.cat(segmentations)
+        segmentations = torch.stack([torch.from_numpy(util.tensor2im(torch.argmax(sf, axis=0, keepdim=True).data, True)) for sf in segmentations])
+        segs.append(segmentations.byte())
         source_image_tensor = torch.from_numpy(np.array(source_image)).unsqueeze(0).expand(frames.size())
         images.append(source_image_tensor)
         print(time.time() - st)
 
-    comp_video = torch.cat([torch.cat(part, dim=2) for part in (images, videos)], dim=1)
+    comp_video = torch.cat([torch.cat(part, dim=2) for part in (images, segs, videos)], dim=1)
     io.write_video('test_data/out.mp4', comp_video, fps=30)
     print(time.time() - st)
 

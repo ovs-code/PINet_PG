@@ -38,7 +38,9 @@ class PoseEstimator:
         self.model = models.pose_hrnet.get_pose_net(cfg, False)
         if use_cuda:
             self.model = self.model.cuda()
-        self.model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
+            self.model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
+        else:
+            self.model.load_state_dict(torch.load(cfg.TEST.MODEL_FILE, map_location=torch.device('cpu')), strict=False)
         self.model.eval()
         self.use_cuda = use_cuda
         self.transform = transforms.Compose([
