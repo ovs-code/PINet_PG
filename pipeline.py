@@ -126,6 +126,7 @@ class SegmentationModel:
 
 
 if __name__ == '__main__':
+<<<<<<< HEAD
     with open('test_data/test.lst') as f:
         persons = [line.strip() for line in f]
     opt = InferOptions().parse()
@@ -152,3 +153,29 @@ if __name__ == '__main__':
     io.write_video('test_data/out.mp4', comp_video, fps=30)
 
     # output_image.save(OUPUT_PATH)
+=======
+    SOURCE_IMAGE_PATH = 'test_data/test/randomphoto_small.jpg'
+<<<<<<< HEAD
+    TARGET_POSE_PATH = 'test_data/testK/randomphoto_small.jpg.npy'
+=======
+    TEST_SEG_PATH = 'test_data/testSPL2/randomphoto_small.png'
+    TARGET_POSE_PATH = 'test_data/test/Oskar_pad_small.jpg.npy'
+>>>>>>> 2e818b8... add output for testing code
+    OUPUT_PATH = 'test_data/out.jpg'
+
+    opt = InferOptions().parse()
+    pipeline = InferencePipeline.from_opts(opt)
+
+    source_image = Image.open(SOURCE_IMAGE_PATH)
+    target_pose = load_pose_from_file(TARGET_POSE_PATH)
+
+<<<<<<< HEAD
+    output_image = pipeline(source_image, target_pose)
+
+    output_image.save(OUPUT_PATH)
+=======
+    output_image, output_segmentation = pipeline(source_image, target_pose)
+
+    Image.fromarray(util.tensor2im(output_image)).save(OUPUT_PATH)
+>>>>>>> 2e818b8... add output for testing code
+>>>>>>> 7687c8b... with models#
