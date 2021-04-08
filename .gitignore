@@ -2,6 +2,7 @@
 __pycache__
 /fashion_data/
 /results/
+/reports/
 /assets/
 /checkpoints/
 .ipynb_checkpoints/
