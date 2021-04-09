@@ -27,12 +27,12 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--lambda_cycle', type=float, default=0.5, help='weight of cycle consistency loss')
 
 
-        self.parser.add_argument('--pool_size', type=int, default=50, help='the size of image buffer that stores previously generated images')
+        self.parser.add_argument('--pool_size', type=int, default=0, help='the size of image buffer that stores previously generated images')
         self.parser.add_argument('--no_html', action='store_true', help='do not save intermediate training results to [opt.checkpoints_dir]/[opt.name]/web/')
         self.parser.add_argument('--lr_policy', type=str, default='lambda', help='learning rate policy: lambda|step|plateau')
         self.parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
 
-        self.parser.add_argument('--L1_type', type=str, default='origin', help='use which kind of L1 loss. (origin|l1_plus_perL1)')
+        self.parser.add_argument('--L1_type', type=str, default='l1_plus_perL1', help='use which kind of L1 loss. (origin|l1_plus_perL1)')
         self.parser.add_argument('--perceptual_layers', type=int, default=3, help='index of vgg layer for extracting perceptual features.')
         self.parser.add_argument('--percep_is_l1', type=int, default=1, help='type of perceptual loss: l1 or l2')
         self.parser.add_argument('--no_dropout_D', action='store_true', help='no dropout for the discriminator')
