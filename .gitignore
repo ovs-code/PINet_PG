@@ -9,6 +9,7 @@ __pycache__
 /test_data/
 *.code-workspace
 /venv
+*.pth
 
 # Flask ignores
 instance/

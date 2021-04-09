@@ -1,0 +1,32 @@
+.steps {
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    z-index: 1;
+    background-color: rgb(235, 235, 235);
+   text-align: center;
+   font-weight: normal;
+   color: #000000;
+}
+
+.snumber {
+   color: #999999;
+   display: inline-block;
+   margin-right: 5px;
+   padding: 5px;
+   text-align: center;
+   -moz-border-radius: 90px 90px 90px 90px;
+   -webkit-border-radius: 90px 90px 90px 90px;
+   -khtml-border-radius: 90px 90px 90px 90px;  
+   border-radius: 100%; 
+}
+
+
+.step1, .step2, .step3 {
+   display: inline-block;
+   background-color: rgb(255, 174, 0);
+}
+
+h2 {
+   text-align: center;
+}

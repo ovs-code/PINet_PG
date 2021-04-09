@@ -1,0 +1,61 @@
+{% extends 'base.html'%}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static',filename='node_modules/cropper/dist/cropper.css') }}">
+<script src="{{ url_for('static',filename='node_modules/cropperjs/dist/cropper.js') }}"></script>
+<script src="{{ url_for('static',filename='node_modules/jquery/dist/jquery.js') }}"></script>
+<script src="{{ url_for('static',filename='js/utils.js') }}"></script>
+<script type="module" src="{{ url_for('static',filename='js/main.js') }}" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css')}}">
+{% endblock %}
+
+{% block progress %}
+<!--
+<div class="steps row">
+  <div class="step1 col-4"><div class="snumber">1</div>Upload Image</div>
+  <div class="step2 col-4"><div class="snumber">2</div>Select Pose</div>
+  <div class="step3 col-4"><div class="snumber">3</div>Transfer</div>
+</div>
+-->
+{% endblock %}
+
+{% block content %}
+<div class="card">
+	<div class="card-body">
+		<div>Hello and welcome to the PoseTransfer webapp. In three simple steps you can create your tranfered poses. No matter if you want to do a handstand or some fancy yoga poses. Just <strong>upload your image, select the pose and transform</strong>.</div>
+		<hr/>
+		<h2 id="upload-heading">Upload Image</h2>
+		<div>Upload an image file or take a photo with your camera and crop it.</div>
+		<div><strong>Hint:</strong> The size of the crop is fixed to 176x276.</div>
+		<div id="alert-box"></div>
+		<div id="crop-box"></div>
+		<div id="image-box" class="mb-3"></div>
+		<div id="image-form" class="custom-file">
+			<input id="id_file" type="file" name="image" class="custom-file-input">
+			<label class="custom-file-label" for="id_file">Click here to upload image</label>
+		</div>
+		<div class="text-center">
+			<button id="confirm-btn" class="btn btn-primary mt-3" style="display: none;">Crop your image</button>
+		</div>
+		<hr/>
+		<h2 id="pose-heading">Select Target Pose</h2>
+		<div id="canvasBox" class="row hiddenradio">
+			{% for pose in poses %}
+			<div class="inputPoseContainer col-xl-2 col-md-4 col-6">
+				<label class="img-label">
+					<input type="radio" name="inputPose" value="{{ loop.index0 }}">
+					<canvas data-pose="{{ pose|tojson }}" id="pose{{ loop.index0 }}" style="border: 1px solid #000"></canvas>
+				</label>
+			</div>
+			{% endfor %}
+		</div>
+		<div class="text-center">
+			<button id="submit-btn" class="btn btn-primary mt-3" type="button">Transform image</button>
+		</div>
+		<hr/>
+		<div id="output-container" class="row" style="display: none;">
+			<h2>Output Image</h2>
+			<div id="target-image"></div>
+		</div>
+		</div>
+</div>
+{% endblock %}
