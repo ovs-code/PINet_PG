@@ -17,8 +17,6 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-import torch
-
 mlq = MLQ('pose_transfer', 'localhost', 6379, 0)
 
 # Create the Inference Pipeline instance
@@ -47,7 +45,7 @@ def inference(input_dict, *args):
     # do the final transfer
     source_image = Image.open(BytesIO(base64.b64decode(source_image)))
     target_image = INFERENCE_PIPELINE(source_image, target_pose)
-    target_image_file = io.BytesIO()
+    target_image_file = BytesIO()
     target_image.save(target_image_file, format="PNG")
     target_image = base64.b64encode(target_image_file.getvalue()).decode()
     return {'target_image': target_image}
