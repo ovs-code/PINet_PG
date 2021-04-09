@@ -29,7 +29,7 @@ class KeyDataset(data.Dataset):
             opt.dataroot, f'fasion-resize-pairs-{opt.phase}.csv'))
         self.transform = self.get_transform(opt)
 
-        if opt.use_bg_augmentation:
+        if opt.use_bg_augmentation or opt.use_bg_augmentation_both:
             self.backgrounds = background.load_backgrounds('data/backgrounds')
 
     def get_datapairs(self, pairLst):
@@ -118,14 +118,38 @@ class KeyDataset(data.Dataset):
 
                 SPL1_img = SPL1_img.transpose(Image.FLIP_LEFT_RIGHT)
                 SPL2_img = SPL2_img.transpose(Image.FLIP_LEFT_RIGHT)
+                
+        if self.opt.phase == 'train' and self.opt.use_topbottom_flip:
+            flip_random = random.uniform(0, 1)
+
+            if flip_random > 0.9:
+                P2_img = P2_img.transpose(Image.FLIP_TOP_BOTTOM)
+
+                KP2_img = np.array(KP2_img[::-1, :, :])  # flip
+
+                SPL2_img = SPL2_img.transpose(Image.FLIP_TOP_BOTTOM)
+                
+        
+        
+        SPL1_img = np.array(SPL1_img)
+        SPL2_img = np.array(SPL2_img)
 
         if self.opt.phase == 'train' and self.opt.use_bg_augmentation:
             # insert background into source image
             bg = random.choice(self.backgrounds)
-            P1_img = background.background_swap(P1_img, SPL1_img, bg)
+            P1_img = background.background_swap(np.array(P1_img), SPL1_img, bg)
             # remove background from target image
-            white = np.ones_like(bg, dtype=np.uint8) * 255
-            P2_img = background.background_swap(P2_img, SPL2_img, white)
+            P2_img = background.remove_background(np.array(P2_img), SPL2_img)
+        elif self.opt.phase == 'train' and self.opt.use_bg_augmentation_both:
+            # insert background into source image
+            bg = random.choice(self.backgrounds)
+            P1_img = background.background_swap(np.array(P1_img), SPL1_img, bg)
+            # remove background from target image
+            P2_img = background.background_swap(np.array(P2_img), SPL2_img, bg)
+        elif self.opt.remove_background:
+            white = np.ones((256, 176), dtype=np.uint8) * 255
+            P1_img = background.remove_background(np.array(P1_img), SPL1_img)
+            P2_img = background.remove_background(np.array(P2_img), SPL2_img)
 
 
         KP1 = torch.from_numpy(KP1_img).float()  # h, w, c
@@ -138,8 +162,8 @@ class KeyDataset(data.Dataset):
 
         P1 = self.transform(P1_img)
         P2 = self.transform(P2_img)
-        SPL1_img = np.expand_dims(np.array(SPL1_img), 0)  # 1*256*176
-        SPL2_img = np.expand_dims(np.array(SPL2_img), 0)
+        SPL1_img = np.expand_dims(SPL1_img, 0)  # 1*256*176
+        SPL2_img = np.expand_dims(SPL2_img, 0)
         _, h, w = SPL2_img.shape
        # print(SPL2_img.shape,SPL1_img.shape)
         num_class = self.class_num

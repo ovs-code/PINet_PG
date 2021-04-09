@@ -136,7 +136,7 @@ class SegmentationModel:
 
 if __name__ == '__main__':
     with open('test_data/test.lst') as f:
-        persons = [line.strip() for line in f]
+        persons = [line.strip() for line in f][:4]
     opt = InferOptions().parse()
     pipeline = InferencePipeline.from_opts(opt)
     videos = [io.read_video('test_data/seq.mp4', pts_unit='sec')[0]]

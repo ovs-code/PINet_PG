@@ -1,5 +1,6 @@
 import ast
 import os
+import math
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -68,11 +69,12 @@ def parse_val_loss(logfile):
 
 
 def plot_row(row, labels, data):
-    upper = max(df[label].max() for label in labels for df in data)
-    lower = min(df[label].min() for label in labels for df in data)
+    upper = max(df[label].max() for label in labels for df in data if label in df)
+    lower = min(df[label].min() for label in labels for df in data if label in df)
     for ax, df in zip(row, data):
         for label in labels:
-            ax.plot(df.index, df[label], label=label)
+            if label in df:
+                ax.plot(df.index, df[label], label=label)
         ax.set_ylim(lower - 0.1, upper + 0.1)
     handles, labels = ax.get_legend_handles_labels()
     leg = row[1].legend(handles, labels, bbox_to_anchor=(1.0, 1.0), loc=0)
@@ -115,24 +117,8 @@ def make_report(checkpoint_dir):
 
         pdf.savefig()
         plt.close()
-
-        # page 2: grid of test examples
-        fig, axs = plt.subplots(5, 5, **A4)
-        [axi.axis('off') for axi in axs.ravel()]
-
-        for i, person in enumerate(persons):
-            source = Image.open(f'test_data/test/{person}.jpg')
-            axs[0, i+1].imshow(source)
-            axs[i+1, 0].imshow(source)
-            for j, t in enumerate(persons):
-                target = Image.open(f'test_data/test/{t}.jpg')
-                out = pipeline.map_to(source, target)
-                axs[i+1, j+1].imshow(out)
-        fig.tight_layout()
-        pdf.savefig()
-        plt.close()
-
-        # page 3: loss graphs
+        
+        # page 2: loss graphs
         fig, axs = plt.subplots(3, 2, **A4)
         axs[0, 0].set_title('Training Loss')
         axs[0, 1].set_title('Validation Loss')
@@ -144,6 +130,27 @@ def make_report(checkpoint_dir):
 
         pdf.savefig()
         plt.close()
+        
+        # page 3-n: grids of test examples
+        for j in range(math.ceil(len(persons) / 4)):
+            group = persons[j*4: (j+1)*4]
+
+            fig, axs = plt.subplots(5, 5, **A4)
+            [axi.axis('off') for axi in axs.ravel()]
+
+            for i, person in enumerate(group):
+                source = Image.open(f'test_data/test/{person}.jpg')
+                axs[0, i+1].imshow(source)
+                axs[i+1, 0].imshow(source)
+                for j, t in enumerate(group):
+                    target = Image.open(f'test_data/test/{t}.jpg')
+                    out = pipeline.map_to(source, target)
+                    axs[i+1, j+1].imshow(out)
+            fig.tight_layout()
+            pdf.savefig()
+            plt.close()
+
+        
 
 
 if __name__ == '__main__':
