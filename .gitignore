@@ -17,3 +17,5 @@ instance/
 .env
 imgs/
 node_modules/
+
+long_train.sh
