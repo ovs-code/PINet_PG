@@ -55,4 +55,5 @@ typing-extensions
 urllib3
 Werkzeug
 wrapt
+numba
 git+https://github.com/ovs-code/HRNet-Human-Pose-Estimation.git

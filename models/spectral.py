@@ -1,10 +1,5 @@
 import torch
-from torch.optim.optimizer import Optimizer, required
-
-from torch.autograd import Variable
-import torch.nn.functional as F
 from torch import nn
-from torch import Tensor
 from torch.nn import Parameter
 
 def l2normalize(v, eps=1e-12):
@@ -35,14 +30,10 @@ class SpectralNorm(nn.Module):
         setattr(self.module, self.name, w / sigma.expand_as(w))
 
     def _made_params(self):
-        try:
-            u = getattr(self.module, self.name + "_u")
-            v = getattr(self.module, self.name + "_v")
-            w = getattr(self.module, self.name + "_bar")
-            return True
-        except AttributeError:
-            return False
-
+        return all(
+            hasattr(self.module, self.name + attr)
+            for attr in ['_u', '_v', '_bar']
+        )
 
     def _make_params(self):
         w = getattr(self.module, self.name)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import os
+from typing import List
 
 import cv2
 import numpy as np
@@ -11,7 +12,7 @@ from torchvision import transforms, io
 from torchvision.io import video
 
 from models.PINet20 import TransferModel, create_model
-import models.parsing 
+import models.parsing
 from options.infer_options import InferOptions
 from tool import cords_to_map, reorder_pose
 from tool.compute_coordinates import DEFAULT_ARGS, PoseEstimator
@@ -41,7 +42,12 @@ class InferencePipeline:
         segmentator = SegmentationModel(opt.segmentation_model, bool(opt.gpu_ids))
         return cls(pose_estimator, pinet, segmentator, opt)
 
-    def __call__(self, image: Image, target_pose_map: torch.Tensor) -> Image:
+    def map_to(self, image: Image, target: Image) -> Image:
+        target_pose = self.pose_estimator.infer(target)
+        target_pose_map = reorder_pose(cords_to_map(target_pose, IMAGE_SIZE))
+        return self.infer(image, target_pose_map)
+
+    def infer(self, image: Image, target_pose_map: torch.Tensor) -> Image:
         # get pose
         pose = self.pose_estimator.infer(image)
 
@@ -70,7 +76,11 @@ class InferencePipeline:
             )
         return Image.fromarray(util.tensor2im(output_image))
 
-    def render_video(self, image: Image, target_poses: str, batch_size=16):
+    def __call__(self, image: Image, target_pose: List):
+        target_pose_map = reorder_pose(cords_to_map(np.array(target_pose), IMAGE_SIZE))
+        return self.infer(image, target_pose_map)
+
+    def render_video(self, image: Image, target_poses: str, batch_size=32):
         # get pose estimation
         pose = self.pose_estimator.infer(image)
         pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))

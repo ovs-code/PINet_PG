@@ -1,20 +1,17 @@
-import numpy as np
-import torch
+import itertools
 import os
 from collections import OrderedDict
+
+import numpy as np
+import torch
+import torch.nn as nn
 from torch.autograd import Variable
-import itertools
+
 import util.util as util
 from util.image_pool import ImagePool
-from . import network20 as networks
-# losses
 from losses.L1_plus_perceptualLoss import L1_plus_perceptualLoss
+from . import network20 as networks
 
-import sys
-import torch.nn.functional as F
-import torchvision.models as models
-import torchvision.transforms as transforms
-import torch.nn as nn
 
 def create_model(opt):
     model = None
@@ -98,17 +95,14 @@ class TransferModel(nn.Module):
             self.criterionGAN = networks.GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
 
             #define shape loss
-            if False: #self._opt.mask_bce:
-                self.parseLoss = torch.nn.BCELoss()
-            else:
-                self.parseLoss = CrossEntropyLoss2d()
+            self.parseLoss = CrossEntropyLoss2d()
 
             if opt.L1_type == 'origin':
                 self.criterionL1 = torch.nn.L1Loss()
             elif opt.L1_type == 'l1_plus_perL1':
                 self.criterionL1 = L1_plus_perceptualLoss(opt.lambda_A, opt.lambda_B, opt.perceptual_layers, self.gpu_ids, opt.percep_is_l1)
             else:
-                raise Excption('Unsurportted type of L1!')
+                raise Exception('Unsupported type of L1!')
             self.criterion_cycle = torch.nn.L1Loss()
             self.loss_cycle = torch.tensor(0)
             # initialize optimizers
@@ -158,10 +152,6 @@ class TransferModel(nn.Module):
 
         self.input_SPL1_set.resize_(input_SPL1.size()).copy_(input_SPL1)
         self.input_SPL2_set.resize_(input_SPL2.size()).copy_(input_SPL2)
-
-
-        #qinput_syn = input_syn[:,:,:,40:216]
-
 
         self.input_P1_set.resize_(input_P1.size()).copy_(input_P1)
         self.input_KP1_set.resize_(input_KP1.size()).copy_(input_KP1)
