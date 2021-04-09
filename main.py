@@ -14,7 +14,7 @@ from PIL import Image
 
 from pipeline import InferencePipeline
 from options.infer_options import InferOptions
-from tool import cords_to_map, get_coords, reorder_pose, load_pose_from_file
+# from tool import cords_to_map, get_coords, reorder_pose, load_pose_from_file
 
 # necessary variable for using tf and torch simulatuosly
 # os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
@@ -36,11 +36,6 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 # Set the upload folder for the user images
 UPLOAD_FOLDER = 'webapp/static/imgs'
 
-# for testing purpose only set the path to the target poses
-TARGET_POSE_PATH = 'test_data/testK/randomphoto_small.jpg.npy'
-# directly load the target pose
-target_pose = load_pose_from_file(TARGET_POSE_PATH)
-
 # Set the allowed extensions (i.e. only images)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp'}
 
@@ -48,9 +43,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp'}
 # CROSSED_LEG_POSE = list(zip([49, 43, 43, 49, 49, 87, 83, 129, 121, 155, 153, 149, 151, 151, 151, 177, 179], [97, 103, 93, 111, 85, 123, 71, 123, 61, 99, 71, 107, 73, 155, 21, 85, 93]))
 POSES = [[[205, 100], [209, 99], [207, 104], [205, 93], [205, 110], [189, 86], [189, 115], [215, 78], [211, 126], [239, 78], [235, 128], [133, 89], [133, 106], [95, 88], [95, 97], [61, 86], [61, 91]], [[43, 97], [37, 97], [39, 93], [43, 80], [41, 82], [67, 82], [67, 78], [101, 95], [103, 97], [77, 100], [79, 102], [133, 91], [135, 84], [183, 82], [181, 82], [229, 80], [231, 80]], [[121, 84], [117, 88], [117, 78], [121, 93], [121, 71], [149, 104], [147, 60], [181, 115], [183, 51], [195, 126], [193, 36], [205, 97], [203, 64], [211, 133], [211, 31], [229, 71], [231, 71]], [[43, 91], [39, 95], [39, 88], [41, 97], [43, 77], [69, 86], [67, 78], [99, 95], [101, 97], [75, 102], [79, 102], [133, 91], [137, 82], [183, 80], [183, 80], [229, 78], [229, 77]], [
     [41, 88], [37, 91], [37, 84], [43, 97], [41, 77], [75, 108], [73, 64], [111, 115], [115, 58], [143, 111], [143, 58], [141, 97], [139, 73], [185, 93], [187, 77], [229, 93], [229, 75]], [[87, 115], [85, 121], [85, 113], [87, 132], [87, 113], [113, 139], [111, 122], [153, 126], [139, 121], [153, 99], [171, 139], [167, 115], [163, 106], [149, 60], [173, 60], [183, 106], [223, 71]], [[205, 38], [205, 40], [203, 38], [197, 56], [193, 42], [177, 62], [177, 53], [199, 33], [195, 25], [205, 47], [225, 14], [137, 99], [139, 80], [159, 152], [157, 152], [205, 144], [205, 144]], [[33, 84], [33, 84], [29, 84], [33, 66], [31, 86], [59, 53], [59, 102], [101, 49], [101, 108], [133, 53], [131, 108], [133, 66], [133, 91], [187, 67], [185, 91], [241, 66], [235, 95]]]
-
-# dummy image for testing the server
-DUMMY_OUTPUT_IMAGE = Image.open('./test_data/out.jpg')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -117,7 +109,7 @@ def index():
         source_image = base64.b64encode(source_image_file.getvalue()).decode()
         payload = {
             'source_image': source_image,
-            'target_pose': None}
+            'target_pose': target_pose}
         
         # send the posted data to the worker
         job_id = mlq.post(payload)

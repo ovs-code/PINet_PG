@@ -17,6 +17,8 @@ from PIL import Image
 from io import BytesIO
 import base64
 
+import torch
+
 mlq = MLQ('pose_transfer', 'localhost', 6379, 0)
 
 # Create the Inference Pipeline instance
@@ -30,6 +32,11 @@ def inference(input_dict, *args):
     # unpack the input
     source_image = input_dict['source_image']
     target_pose = input_dict['target_pose']
+
+    # TODO: bring the target pose list into the 
+    # right input format for the torch model
+    # transform the target pose into tensor
+    target_pose = torch.Tensor(target_pose)
     
     # get the source pose
     # source_pose = KEYPOINT_MODEL(source_image)
