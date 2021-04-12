@@ -36,6 +36,8 @@ class InferOptions():
         self.parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
         self.parser.add_argument('--pose_estimator', default='assets/pretrains/pose_hrnet_w48_256x192.pth', help='Pretrained model for cao pose estimator')
         self.parser.add_argument('--segmentation_model', default='assets/pretrains/CIHP_trained.pth', help='Pretrained model for cao pose estimator')
+        
+        self.parser.add_argument('--remove_background', action='store_true', help='Remove background from images')
 
 
 
