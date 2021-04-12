@@ -20,3 +20,5 @@ node_modules/
 
 long_train.sh
 *.rdb
+
+/videos/
