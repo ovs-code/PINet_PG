@@ -119,6 +119,53 @@ def index():
     else:
         return f'error {request.method} method not implemented'
 
+# app routes for serving the website
+@app.route('/videos', methods=['GET', 'POST'])
+def videos():
+    if request.method == 'POST':
+        print('POST request received')
+        if 'image' not in request.files or not request.files['image']:
+            flash('No image selected')
+            return redirect(request.url)
+        image = request.files['image']
+        if not allowed_file(image.filename):
+            flash(f'Image Type has to be one of {ALLOWED_EXTENSIONS}')
+            return redirect(request.url)
+        
+        source_image = Image.open(image).convert(mode='RGB')
+        img_width, img_height = source_image.size
+        if img_width != 176 or img_height != 256:
+            flash('Image has wrong input format. Try again.')
+            return redirect(request.url)
+
+        # TODO: check for the target pose
+        if 'inputPose' not in request.form or not request.form['inputPose']:
+            flash('Please select a target pose')
+            return redirect(request.url)
+        else:
+            try:
+                pose_id = int(request.form['inputPose'])
+                target_pose = POSES[pose_id]
+            except ValueError:
+                flash('Pose ID is invalid')
+                return redirect(request.url)
+
+        # TODO: make the form data serializable
+        source_image_file = io.BytesIO()
+        source_image.save(source_image_file, format="PNG")
+        source_image = base64.b64encode(source_image_file.getvalue()).decode()
+        payload = {
+            'source_image': source_image,
+            'target_pose': target_pose}
+        
+        # send the posted data to the worker
+        job_id = mlq.post(payload)
+        return job_id
+    elif request.method == 'GET':
+        return render_template('index.html', poses=POSES)
+    else:
+        return f'error {request.method} method not implemented'
+
 @app.route('/impressum')
 def impressum():
     return render_template('impressum.html')

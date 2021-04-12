@@ -34,10 +34,10 @@
 			<label class="custom-file-label" for="id_file">Click here to upload image</label>
 		</div>
 		<div class="text-center">
-			<button id="confirm-btn" class="btn btn-primary mt-3" style="display: none;">Crop Image</button>
+			<button id="confirm-btn" class="btn btn-primary mt-3" style="display: none;">Crop your image</button>
 		</div>
 		<hr/>
-		<h2 id="pose-heading">Select Target Pose</h2>
+		<h2 id="pose-heading">Select Target Video</h2>
 		<div id="canvasBox" class="row hiddenradio">
 			{% for pose in poses %}
 			<div class="inputPoseContainer col-xl-2 col-md-4 col-6">
@@ -49,11 +49,11 @@
 			{% endfor %}
 		</div>
 		<div class="text-center">
-			<button id="submit-btn" class="btn btn-primary mt-3" type="button" disabled>Transform image</button>
+			<button id="submit-btn" class="btn btn-primary mt-3" type="button">Generate Video</button>
 		</div>
 		<hr/>
 		<div id="output-container" class="row" style="display: none;">
-			<h2>Output Image</h2>
+			<h2>Output Video</h2>
 			<div id="target-image"></div>
 		</div>
 		</div>

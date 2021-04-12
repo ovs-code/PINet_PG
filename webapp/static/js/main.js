@@ -9,6 +9,48 @@ const csrf = document.getElementsByName('csrfmiddlewaretoken')
 var url;
 
 input.addEventListener('change', ()=>{
+    function cropIt() {
+        console.log('crop it');
+        cropper.getCroppedCanvas({
+            width: 176,
+            height: 256,
+            fillColor: 'white',
+        }).toBlob((blob) => {
+            url = URL.createObjectURL(blob)
+            // instead display the cropped image
+            cropBox.innerHTML = `<img class="mx-auto d-block" src="${url}" id="crop">`
+        })
+        // show the cropBox
+        cropBox.style.display = 'block';
+
+        // hidde the cropper and the form
+        imageBox.style.display = 'none';
+        imageForm.style.display = 'none';
+
+        confirmBtn.innerText = 'Recrop/Upload Image';
+        confirmBtn.removeEventListener('click', cropIt);
+        confirmBtn.addEventListener('click', recropIt);
+        $('html,body').animate({
+            scrollTop: $('#pose-heading').offset().top
+        }, 'slow')
+        document.getElementById('submit-btn').disabled = false;
+    };
+
+    function recropIt() {
+        // hide the currently cropped image
+        cropBox.style.display = 'none';
+
+        // show the cropper and the form
+        imageBox.style.display = 'block';
+        imageForm.style.display = 'block';
+
+        confirmBtn.innerText = 'Crop Image';
+        confirmBtn.removeEventListener('click', recropIt);
+        confirmBtn.addEventListener('click', cropIt);
+        $('html,body').animate({
+            scrollTop: $('#upload-heading').offset().top
+        }, 'slow')
+    };
     alertBox.innerHTML = ""
     confirmBtn.classList.remove('not-visible')
     confirmBtn.style = null;
@@ -21,9 +63,9 @@ input.addEventListener('change', ()=>{
     const cropper = new Cropper(image, {
         autoCrop: true,
         autoCropArea: 0,
-        initialAspectRatio: 176/256,
+        initialAspectRatio: 176 / 256,
         cropBoxResizable: false,
-        crop: function(event) {
+        crop: function (event) {
             console.log(event.detail.x);
             console.log(event.detail.y);
             console.log(event.detail.width);
@@ -40,29 +82,11 @@ input.addEventListener('change', ()=>{
         scrollTop: $('#upload-heading').offset().top
     }, 1000)
 
-
-    confirmBtn.addEventListener('click', ()=>{
-        cropper.getCroppedCanvas({
-            width: 176,
-            height: 256,
-            fillColor: 'white',
-        }).toBlob((blob) => {
-            url = URL.createObjectURL(blob)
-            // instead display the cropped image
-            cropBox.innerHTML = `<img class="mx-auto d-block" src="${url}" id="crop">`
-        })
-        // hidde the cropper and the form
-        imageBox.style.display = 'none';
-        imageForm.style.display = 'none';
-
-        confirmBtn.innerText = 'Recrop image';
-
-        $('html,body').animate({
-            scrollTop: $('#pose-heading').offset().top
-        }, 'slow')
-
-    })
+    confirmBtn.addEventListener('click', cropIt);
 })
+
+// make the first radiobutton checked
+$('input:radio[name=inputPose]:first').attr('checked', true);
 
 const posesBox = document.getElementById('posesBox')
 var numPoses = 8  // set this for the number of selectable poses
@@ -128,7 +152,8 @@ submitBtn.addEventListener('click', async () => {
                     var image;
                     if (targetContainer.hasChildNodes()) {
                         console.log(targetContainer.childNodes)
-                        image = output.childNodes[0];
+                        image = targetContainer.childNodes[0];
+                        console.log('updated image')
                         image.src = "data:image/png;base64," + result['target_image'];
                     } else {
                         image = document.createElement("img");
