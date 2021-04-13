@@ -39,12 +39,12 @@ def weights_init_kaiming(m):
     classname = m.__class__.__name__
     # print(classname)
     if classname.find('Conv') != -1:
-        init.kaiming_normal(m.weight.data, a=0, mode='fan_in')
+        init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
     elif classname.find('Linear') != -1:
-        init.kaiming_normal(m.weight.data, a=0, mode='fan_in')
+        init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
     elif classname.find('BatchNorm2d') != -1:
-        init.normal(m.weight.data, 1.0, 0.02)
-        init.constant(m.bias.data, 0.0)
+        init.normal_(m.weight.data, 1.0, 0.02)
+        init.constant_(m.bias.data, 0.0)
 
 
 def weights_init_orthogonal(m):
@@ -226,7 +226,7 @@ class Self_Attn(nn.Module):
         self.softmax = nn.Softmax(dim=-1)  #
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal(m.weight)
+                nn.init.kaiming_normal_(m.weight)
 
     def forward(self, x):
         """
@@ -265,7 +265,7 @@ class Gated_conv(nn.Module):
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal(m.weight)
+                nn.init.kaiming_normal_(m.weight)
 
     def forward(self, x):
         """
