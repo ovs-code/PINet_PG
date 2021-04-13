@@ -4,7 +4,7 @@
 <script src="{{ url_for('static',filename='node_modules/cropperjs/dist/cropper.js') }}"></script>
 <script src="{{ url_for('static',filename='node_modules/jquery/dist/jquery.js') }}"></script>
 <script src="{{ url_for('static',filename='js/utils.js') }}"></script>
-<script type="module" src="{{ url_for('static',filename='js/main.js') }}" defer></script>
+<script type="module" src="{{ url_for('static',filename='js/videos.js') }}" defer></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css')}}">
 {% endblock %}
 
@@ -39,17 +39,20 @@
 		<hr/>
 		<h2 id="pose-heading">Select Target Video</h2>
 		<div id="canvasBox" class="row hiddenradio">
-			{% for pose in poses %}
+			{% for video in videos %}
 			<div class="inputPoseContainer col-xl-2 col-md-4 col-6">
-				<label class="img-label">
+				<label class="vid-label">
 					<input type="radio" name="inputPose" value="{{ loop.index0 }}">
-					<canvas data-pose="{{ pose|tojson }}" id="pose{{ loop.index0 }}" style="border: 1px solid #000"></canvas>
+					<video width="100%" height="100%" autoplay loop>
+						<source src={{ url_for('static', filename="videos/out/"+video ) }} type="video/mp4">
+							Your browser does not support the video tag.
+					</video>
 				</label>
 			</div>
 			{% endfor %}
 		</div>
 		<div class="text-center">
-			<button id="submit-btn" class="btn btn-primary mt-3" type="button">Generate Video</button>
+			<button id="submit-btn" class="btn btn-primary mt-3" type="button" disabled>Generate Video</button>
 		</div>
 		<hr/>
 		<div id="output-container" class="row" style="display: none;">

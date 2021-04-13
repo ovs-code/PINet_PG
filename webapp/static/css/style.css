@@ -63,10 +63,19 @@ img {
   outline: 2px solid rgb(37, 228, 53);
 }
 
+.hiddenradio [type=radio]:checked + video{
+  outline: 2px solid rgb(37, 228, 53);
+}
+
 .img-label {
   width: 100%;
   background-color: black;
   display: block;
+  z-index: 3;
+}
+
+.vid-label {
+  width: 100%;
   z-index: 3;
 }
 
