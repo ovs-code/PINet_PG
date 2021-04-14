@@ -136,12 +136,14 @@ submitBtn.addEventListener('click', async () => {
                     }
                 } else {
                     let result = await fetch('/api/result/' + id).then(r => r.json());
+                    console.log(result);
                     // display the response image
                     const output = document.getElementById('output-container');
                     output.style.display = 'block';
                     const targetContainer = document.getElementById('target-image');
-                    targetContainer.innerHTML = `<video width="100%" height="100%" autoplay loop>
-						<source src=${"/static/videos/generated/" + result['target_image']} type="video/mp4">
+                    targetContainer.classList.add('text-center')
+                    targetContainer.innerHTML = `<video width="auto" height="auto" autoplay loop>
+						<source src=${"/static/videos/generated/" + result['target_video']} type="video/mp4">
 							Your browser does not support the video tag.
 					</video>`
                     submitBtn.innerHTML = `Transform`;

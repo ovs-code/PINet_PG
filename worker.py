@@ -1,6 +1,7 @@
 import asyncio
 import time
 import torch
+import torchvision
 
 from mlq.queue import MLQ
 
@@ -42,9 +43,12 @@ def inference(input_dict, *args):
         frames = frames.float()
         frames = torch.movedim(frames, 1, 3)
         frames = (frames + 1) / 2.0 * 255.0
-        target_video_file = NamedTemporaryFile(dir='./webapp/static/videos/generated/')
-        io.write_video(target_video_file.name, frames.bytes(), fps=30)
-        return {'target_video': target_video_file.name}
+        print(frames.shape)
+        target_video_file = NamedTemporaryFile(dir='webapp/static/videos/generated/', suffix='.mp4', delete=True)
+        torchvision.io.write_video(target_video_file, frames.byte(), fps=30)
+        target_video_file.seek(0)
+        target_video_file_name = target_video_file.name.split('/')[-1]
+        return {'target_video': target_video_file_name}
     else:
         # unpack the input
         source_image = input_dict['source_image']
