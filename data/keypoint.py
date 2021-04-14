@@ -168,6 +168,14 @@ class KeyDataset(data.Dataset):
         P2 = self.transform(P2_img)
         SPL1_img = np.expand_dims(SPL1_img, 0)  # 1*256*176
         SPL2_img = np.expand_dims(SPL2_img, 0)
+        # reduce number of parsing classes
+        # dress -> upper clothes
+        SPL1_img = np.where(SPL1_img==3, 2, SPL1_img)
+        SPL2_img = np.where(SPL2_img==3, 2, SPL2_img)
+        # skirt -> pants
+        SPL1_img = np.where(SPL1_img==6, 4, SPL1_img)
+        SPL2_img = np.where(SPL2_img==6, 4, SPL2_img)
+
         _, h, w = SPL2_img.shape
        # print(SPL2_img.shape,SPL1_img.shape)
         num_class = self.class_num

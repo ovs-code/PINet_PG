@@ -31,7 +31,7 @@ class InferencePipeline:
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
- 
+
     @classmethod
     def from_opts(cls, opt) -> InferencePipeline:
         """Load all trained models required from the locations indicated in opt."""
@@ -50,18 +50,18 @@ class InferencePipeline:
     def infer(self, image: Image, target_pose_map: torch.Tensor) -> Image:
         # get pose
         pose = self.pose_estimator.infer(image)
- 
+
         # convert to pose map
         pose_map = reorder_pose(cords_to_map(pose, IMAGE_SIZE))
- 
+
         # get segmentation map ...
         spl_onehot = self.segmentator.get_segmap(image).unsqueeze(0)
         if self.opt.remove_background:
             image = remove_background(np.array(image), 1-spl_onehot[0, 0])
- 
+
         # run PINet
         image_norm = self.transform(image).unsqueeze(0)
- 
+
         if self.opt.gpu_ids:
             # move data to GPU
             device = self.opt.gpu_ids[0]
@@ -81,7 +81,7 @@ class InferencePipeline:
     def __call__(self, image: Image, target_pose: List):
         target_pose_map = reorder_pose(cords_to_map(np.array(target_pose), IMAGE_SIZE))
         return self.infer(image, target_pose_map)
- 
+
     def render_video(self, image: Image, target_poses: str, batch_size=32):
         # get pose estimation
         pose = self.pose_estimator.infer(image)
@@ -100,7 +100,7 @@ class InferencePipeline:
             target_poses = target_poses.cuda(device)
             image_norm = image_norm.cuda(device)
             spl_onehot = spl_onehot.cuda(device)
- 
+
         pose_map = pose_map.expand(batch_size, -1, -1, -1)
         spl_onehot = spl_onehot.expand(batch_size, -1, -1, -1)
         image_norm = image_norm.expand(batch_size, -1, -1, -1)
@@ -116,16 +116,21 @@ class InferencePipeline:
                     spl_onehot[:nel]
                 )
                 yield (output_images.detach().cpu(), output_segmentations.detach().cpu())
- 
- 
+
+
 class SegmentationModel:
     def __init__(self, path, use_cuda=True):
         self.use_cuda = use_cuda
         self.model = models.parsing.load_model(path, use_cuda=self.use_cuda)
- 
+
     def get_segmap(self, image):
         # TODO: Improve performance by not doing torch -> numpy -> torch
         SPL_img = models.parsing.infer(self.model, image, self.use_cuda)
+        # reduce number of parsing classes
+        # dress -> upper clothes
+        SPL_img = np.where(SPL_img==3, 2, SPL_img)
+        # skirt -> pants
+        SPL_img = np.where(SPL_img==6, 4, SPL_img)
         num_class = 12
         _, h, w = SPL_img.shape
         tmp = torch.from_numpy(SPL_img).view(-1).long()
@@ -134,8 +139,8 @@ class SegmentationModel:
         SPL_onehot = ones.view([h, w, num_class])
         SPL_onehot = SPL_onehot.permute(2, 0, 1)
         return SPL_onehot
- 
- 
+
+
 if __name__ == '__main__':
     with open('test_data/test.lst') as f:
         persons = [line.strip() for line in f][:4]
@@ -158,8 +163,8 @@ if __name__ == '__main__':
         segs.append(segmentations.byte())
         source_image_tensor = torch.from_numpy(np.array(source_image)).unsqueeze(0).expand(frames.size())
         images.append(source_image_tensor)
- 
+
     comp_video = torch.cat([torch.cat(part, dim=2) for part in (images, segs, videos)], dim=1)
     io.write_video('test_data/out.mp4', comp_video, fps=30)
- 
+
     # output_image.save(OUPUT_PATH)
