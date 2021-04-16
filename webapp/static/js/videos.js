@@ -10,7 +10,6 @@ var url;
 
 input.addEventListener('change', ()=>{
     function cropIt() {
-        console.log('crop it');
         cropper.getCroppedCanvas({
             width: 176,
             height: 256,
@@ -65,15 +64,6 @@ input.addEventListener('change', ()=>{
         autoCropArea: 0,
         initialAspectRatio: 176 / 256,
         cropBoxResizable: false,
-        crop: function (event) {
-            console.log(event.detail.x);
-            console.log(event.detail.y);
-            console.log(event.detail.width);
-            console.log(event.detail.height);
-            console.log(event.detail.rotate);
-            console.log(event.detail.scaleX);
-            console.log(event.detail.scaleY);
-        },
         dragMode: 'move',
         movable: false
     });
@@ -121,31 +111,32 @@ submitBtn.addEventListener('click', async () => {
         },
         submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm"></span>Transforming...`,
         submitBtn.disabled = true,
-        console.log('sucessfully sent to backend'),
         // create the spinning wheel
         setTimeout(async () => {
-            console.log(id)
             const progressChecker = async () => {
                 // check every second til complete
                 status = await fetch('/api/status/' + id).then(r => r.text());
                 if (status !== '[completed]') {
                     if (status === '[failed]') {
-                        waitMessage.innerText = 'Backend said this failed. Sorry :('
+                        const videoResultWarning = document.getElementById('videoResultWarning')
+                        videoResultWarning.classList = 'alert alert-error'
+                        videoResultWarning.innerText = 'Backend said this failed. Sorry :('
+                        submitBtn.innerHTML = `Transform`;
+                        submitBtn.disabled = false;
                     } else {
                         setTimeout(progressChecker, 1000);
                     }
                 } else {
                     let result = await fetch('/api/result/' + id).then(r => r.json());
-                    console.log(result);
                     // display the response image
                     const output = document.getElementById('output-container');
                     output.style.display = 'block';
                     const targetContainer = document.getElementById('target-image');
                     targetContainer.classList.add('text-center')
                     targetContainer.innerHTML = `<video width="auto" height="auto" autoplay loop>
-						<source src=${"/static/videos/generated/" + result['target_video']} type="video/mp4">
-							Your browser does not support the video tag.
-					</video>`
+                    <source src=${"/static/videos/generated/" + result['target_video']} type="video/mp4">
+                            Your browser does not support the video tag.
+                    </video>`
                     submitBtn.innerHTML = `Transform`;
                     submitBtn.disabled = false;
                     $('html,body').animate({

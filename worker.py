@@ -27,6 +27,10 @@ mlq = MLQ('pose_transfer', 'localhost', 6379, 0)
 pip_opts = InferOptions().parse(['--name', 'fashion_PInet_cycle'])
 INFERENCE_PIPELINE = InferencePipeline.from_opts(pip_opts)
 
+# Create the Inference Pipeline instance
+#pip_opts = InferOptions().parse(['--name', 'fashion_PInet_video'])
+#INFERENCE_PIPELINE_VIDEO = InferencePipeline.from_opts(pip_opts)
+
 def inference(input_dict, *args):
     """
     Function for the actual inference
@@ -43,7 +47,6 @@ def inference(input_dict, *args):
         frames = frames.float()
         frames = torch.movedim(frames, 1, 3)
         frames = (frames + 1) / 2.0 * 255.0
-        print(frames.shape)
         target_video_file = NamedTemporaryFile(dir='webapp/static/videos/generated/', suffix='.mp4', delete=True)
         torchvision.io.write_video(target_video_file, frames.byte(), fps=30)
         target_video_file.seek(0)

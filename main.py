@@ -79,7 +79,6 @@ def allowed_file(filename):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        print('POST request received')
         if 'image' not in request.files or not request.files['image']:
             flash('No image selected')
             return redirect(request.url)
@@ -127,7 +126,6 @@ def index():
 @app.route('/videos', methods=['GET', 'POST'])
 def videos():
     if request.method == 'POST':
-        print('POST request received')
         if 'image' not in request.files or not request.files['image']:
             flash('No image selected')
             return redirect(request.url)
@@ -179,3 +177,4 @@ def impressum():
 with app.test_request_context():
     print(url_for('index'))
     print(url_for('impressum'))
+    print(url_for('videos'))

@@ -65,15 +65,6 @@ input.addEventListener('change', ()=>{
         autoCropArea: 0,
         initialAspectRatio: 176 / 256,
         cropBoxResizable: false,
-        crop: function (event) {
-            console.log(event.detail.x);
-            console.log(event.detail.y);
-            console.log(event.detail.width);
-            console.log(event.detail.height);
-            console.log(event.detail.rotate);
-            console.log(event.detail.scaleX);
-            console.log(event.detail.scaleY);
-        },
         dragMode: 'move',
         movable: false
     });
@@ -133,13 +124,15 @@ submitBtn.addEventListener('click', async () => {
         console.log('sucessfully sent to backend'),
         // create the spinning wheel
         setTimeout(async () => {
-            console.log(id)
             const progressChecker = async () => {
                 // check every second til complete
                 status = await fetch('/api/status/' + id).then(r => r.text());
                 if (status !== '[completed]') {
                     if (status === '[failed]') {
-                        waitMessage.innerText = 'Backend said this failed. Sorry :('
+                        const imageResultWarning = document.getElementById('imageResultWarning')
+                        imageResultWarning.innerText = 'Backend said this failed. Sorry :('
+                        submitBtn.innerHTML = `Transform`;
+                        submitBtn.disabled = false;
                     } else {
                         setTimeout(progressChecker, 1000);
                     }
@@ -151,9 +144,7 @@ submitBtn.addEventListener('click', async () => {
                     const targetContainer = document.getElementById('target-image');
                     var image;
                     if (targetContainer.hasChildNodes()) {
-                        console.log(targetContainer.childNodes)
                         image = targetContainer.childNodes[0];
-                        console.log('updated image')
                         image.src = "data:image/png;base64," + result['target_image'];
                     } else {
                         image = document.createElement("img");
