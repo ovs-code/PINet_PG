@@ -3,22 +3,21 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 from PIL import Image
-import inspect, re
+import inspect
+import re
 import numpy as np
 import os
 import collections
 
-from skimage.draw import circle, line_aa, polygon
+from skimage.draw import circle, line_aa
 
-import pickle
 
-#copy from pose transfer (zhu et al.)
-
+# copy from pose transfer (zhu et al.)
 
 # Converts a Tensor into a Numpy array
 # |imtype|: the desired type of the converted numpy array
 def tensor2im(image_tensor, need_dec=False, imtype=np.uint8):
-    if len(image_tensor.shape)==4:
+    if len(image_tensor.shape) == 4:
         image_numpy = image_tensor[0].cpu().float().numpy()
     else:
         image_numpy = image_tensor.cpu().float().numpy()
@@ -28,19 +27,21 @@ def tensor2im(image_tensor, need_dec=False, imtype=np.uint8):
 
     image_numpy = np.transpose(image_numpy, (1, 2, 0))
     if need_dec:
-#        image_numpy = torch.argmax(image_numpy, 2)
+        # image_numpy = torch.argmax(image_numpy, 2)
         image_numpy = decode_labels(image_numpy.astype(int))
     else:
         image_numpy = (image_numpy + 1) / 2.0 * 255.0
 
     return image_numpy.astype(imtype)
-#label color
-label_colours = [(0,0,0)
-                , (128,0,0), (255,0,0), (0,85,0), (170,0,51), (255,85,0), (0,0,85), (0,119,221), (85,85,0), (0,85,85), (85,51,0), (52,86,128), (0,128,0)
-                , (0,0,255), (51,170,221), (0,255,255), (85,255,170), (170,255,85), (255,255,0), (255,170,0)]
+
+
+# label color
+label_colours = [(0, 0, 0), (128, 0, 0), (255, 0, 0), (0, 85, 0), (170, 0, 51), (255, 85, 0), (0, 0, 85), (0, 119, 221), (85, 85, 0), (0, 85, 85),
+                 (85, 51, 0), (52, 86, 128), (0, 128, 0), (0, 0, 255), (51, 170, 221), (0, 255, 255), (85, 255, 170), (170, 255, 85), (255, 255, 0), (255, 170, 0)]
 
 # draw pose img
-LIMB_SEQ = [[5,7], [7, 9], [5, 6], [6, 8], [8, 10], [5, 11], [11, 12], [6, 12], [11, 13], [13, 15], [12, 14], [14, 16]]
+LIMB_SEQ = [[5, 7], [7, 9], [5, 6], [6, 8], [8, 10], [5, 11],
+            [11, 12], [6, 12], [11, 13], [13, 15], [12, 14], [14, 16]]
 
 COLORS = [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0], [85, 255, 0], [0, 255, 0],
           [0, 255, 85], [0, 255, 170], [0, 255, 255], [0, 170, 255], [0, 85, 255], [0, 0, 255], [85, 0, 255],
@@ -57,12 +58,12 @@ LABELS = [
 
 MISSING_VALUE = -1
 
+
 def map_to_cord(pose_map, threshold=0.1):
     all_peaks = [[] for i in range(17)]
     pose_map = pose_map[..., :17]
 
-    y, x, z = np.where(np.logical_and(pose_map == pose_map.max(axis = (0, 1)),
-                                     pose_map > threshold))
+    y, x, z = np.where(np.logical_and(pose_map == pose_map.max(axis=(0, 1)), pose_map > threshold))
     for x_i, y_i, z_i in zip(x, y, z):
         all_peaks[z_i].append([x_i, y_i])
 
@@ -78,6 +79,7 @@ def map_to_cord(pose_map, threshold=0.1):
             y_values.append(MISSING_VALUE)
 
     return np.concatenate([np.expand_dims(y_values, -1), np.expand_dims(x_values, -1)], axis=1)
+
 
 def draw_pose_from_map(pose_map, threshold=0.1, **kwargs):
     # CHW -> HCW -> HWC
@@ -129,21 +131,25 @@ def save_image(image_numpy, image_path):
     image_pil = Image.fromarray(image_numpy)
     image_pil.save(image_path)
 
+
 def info(object, spacing=10, collapse=1):
     """Print methods and doc strings.
     Takes module, class, list, dictionary, or string."""
-    methodList = [e for e in dir(object) if isinstance(getattr(object, e), collections.Callable)]
+    methodList = [e for e in dir(object) if isinstance(
+        getattr(object, e), collections.Callable)]
     processFunc = collapse and (lambda s: " ".join(s.split())) or (lambda s: s)
-    print( "\n".join(["%s %s" %
+    print("\n".join(["%s %s" %
                      (method.ljust(spacing),
                       processFunc(str(getattr(object, method).__doc__)))
-                     for method in methodList]) )
+                     for method in methodList]))
+
 
 def varname(p):
     for line in inspect.getframeinfo(inspect.currentframe().f_back)[3]:
         m = re.search(r'\bvarname\s*\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)', line)
         if m:
             return m.group(1)
+
 
 def print_numpy(x, val=True, shp=False):
     x = x.astype(np.float64)
@@ -186,16 +192,6 @@ def morph(src_bg_mask, ks, mode='erode', kernel=None):
 
     return out
 
-def load_pickle_file(pkl_path):
-    with open(pkl_path, 'rb') as f:
-        data = pickle.load(f, encoding='latin1')
-
-    return data
-
-
-def write_pickle_file(pkl_path, data_dict):
-    with open(pkl_path, 'wb') as fp:
-        pickle.dump(data_dict, fp, protocol=2)
 
 def decode_labels(mask, num_images=1, num_classes=20):
     """Decode batch of segmentation masks.
@@ -210,7 +206,7 @@ def decode_labels(mask, num_images=1, num_classes=20):
     """
     h, w, c = mask.shape
     #assert(n >= num_images), 'Batch size %d should be greater or equal than number of images to save %d.' % (n, num_images)
-    outputs = np.zeros(( h, w, 3), dtype=np.uint8)
+    outputs = np.zeros((h, w, 3), dtype=np.uint8)
 
     img = Image.new('RGB', (len(mask[0]), len(mask)))
     pixels = img.load()
@@ -218,15 +214,16 @@ def decode_labels(mask, num_images=1, num_classes=20):
     tmp1 = []
     for j_, j in enumerate(mask[:, :, 0]):
         for k_, k in enumerate(j):
-            #tmp1.append(k)
-            #tmp.append(k)
+            # tmp1.append(k)
+            # tmp.append(k)
             if k < num_classes:
-                pixels[k_,j_] = label_colours[k]
+                pixels[k_, j_] = label_colours[k]
     #np.save('tmp1.npy', tmp1)
-    #np.save('tmp.npy',tmp)
+    # np.save('tmp.npy',tmp)
     outputs = np.array(img)
-    #print(outputs[144,:,0])
+    # print(outputs[144,:,0])
     return outputs
+
 
 def same_padding(images, ksizes, strides, rates):
     assert len(images.size()) == 4

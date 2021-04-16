@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 import os
 from typing import List
- 
 import cv2
 import numpy as np
 import torch
@@ -12,7 +11,7 @@ from torchvision import transforms, io
 from torchvision.io import video
  
 from models.PINet20 import TransferModel, create_model
-import models.parsing 
+import models.parsing
 from options.infer_options import InferOptions
 from tool import cords_to_map, reorder_pose
 from tool.compute_coordinates import DEFAULT_ARGS, PoseEstimator
@@ -41,12 +40,12 @@ class InferencePipeline:
         pose_estimator = PoseEstimator(args, opt.gpu_ids != [])
         segmentator = SegmentationModel(opt.segmentation_model, bool(opt.gpu_ids))
         return cls(pose_estimator, pinet, segmentator, opt)
- 
+
     def map_to(self, image: Image, target: Image) -> Image:
         target_pose = self.pose_estimator.infer(target)
         target_pose_map = reorder_pose(cords_to_map(target_pose, IMAGE_SIZE))
         return self.infer(image, target_pose_map)
- 
+
     def infer(self, image: Image, target_pose_map: torch.Tensor) -> Image:
         # get pose
         pose = self.pose_estimator.infer(image)
@@ -75,7 +74,7 @@ class InferencePipeline:
                 spl_onehot
             )
         return Image.fromarray(util.tensor2im(output_image))
- 
+
     def __call__(self, image: Image, target_pose: List):
         target_pose_map = reorder_pose(cords_to_map(np.array(target_pose), IMAGE_SIZE))
         return self.infer(image, target_pose_map)
@@ -136,7 +135,7 @@ class SegmentationModel:
  
 if __name__ == '__main__':
     with open('test_data/test.lst') as f:
-        persons = [line.strip() for line in f]
+        persons = [line.strip() for line in f][:4]
     opt = InferOptions().parse()
     pipeline = InferencePipeline.from_opts(opt)
     videos = [io.read_video('test_data/seq.mp4', pts_unit='sec')[0]]

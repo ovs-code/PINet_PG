@@ -19,15 +19,15 @@ class BaseOptions():
         self.parser.add_argument('--ngf', type=int, default=64, help='# of gen filters in first conv layer')
         self.parser.add_argument('--ndf', type=int, default=64, help='# of discrim filters in first conv layer')
         self.parser.add_argument('--which_model_netD', type=str, default='resnet', help='selects model to use for netD')
-        self.parser.add_argument('--which_model_netG', type=str, default='PATN', help='selects model to use for netG')
+        self.parser.add_argument('--which_model_netG', type=str, default='PInet', help='selects model to use for netG')
         self.parser.add_argument('--n_layers_D', type=int, default=3, help='blocks used in D')
         self.parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         self.parser.add_argument('--name', type=str, default='experiment_name', help='name of the experiment. It decides where to store samples and models')
-        self.parser.add_argument('--dataset_mode', type=str, default='unaligned', help='chooses how datasets are loaded. [unaligned | aligned | single]')
-        self.parser.add_argument('--model', type=str, default='cycle_gan',
+        self.parser.add_argument('--dataset_mode', type=str, default='keypoint', help='chooses how datasets are loaded. [unaligned | aligned | single]')
+        self.parser.add_argument('--model', type=str, default='PInet',
                                  help='chooses which model to use. cycle_gan, pix2pix, test')
         self.parser.add_argument('--which_direction', type=str, default='AtoB', help='AtoB or BtoA')
-        self.parser.add_argument('--nThreads', default=2, type=int, help='# threads for loading data')
+        self.parser.add_argument('--nThreads', default=6, type=int, help='# threads for loading data')
         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         self.parser.add_argument('--norm', type=str, default='instance', help='instance normalization or batch normalization')
         self.parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')
@@ -36,18 +36,22 @@ class BaseOptions():
         self.parser.add_argument('--display_port', type=int, default=8097, help='visdom port of the web display')
         self.parser.add_argument('--no_dropout', action='store_true', help='no dropout for the generator')
         self.parser.add_argument('--max_dataset_size', type=int, default=float("inf"), help='Maximum number of samples allowed per dataset. If the dataset directory contains more than max_dataset_size, only a subset is loaded.')
-        self.parser.add_argument('--resize_or_crop', type=str, default='resize_and_crop', help='scaling and cropping of images at load time [resize_and_crop|crop|scale_width|scale_width_and_crop]')
-        self.parser.add_argument('--no_flip', action='store_true', help='if specified, do not flip the images for data augmentation')
+        self.parser.add_argument('--resize_or_crop', type=str, default='no', help='scaling and cropping of images at load time [resize_and_crop|crop|scale_width|scale_width_and_crop]')
         self.parser.add_argument('--init_type', type=str, default='kaiming', help='network initialization [normal|xavier|kaiming|orthogonal]')
 
         self.parser.add_argument('--P_input_nc', type=int, default=3, help='# of input image channels')
-        self.parser.add_argument('--BP_input_nc', type=int, default=1, help='# of input image channels')
+        self.parser.add_argument('--BP_input_nc', type=int, default=17, help='# of input image channels')
         self.parser.add_argument('--padding_type', type=str, default='reflect', help='# of input image channels')
 
         self.parser.add_argument('--with_D_PP', type=int, default=1, help='use D to judge P and P is pair or not')
         self.parser.add_argument('--with_D_PB', type=int, default=1, help='use D to judge P and B is pair or not')
 
-        self.parser.add_argument('--use_flip', type=int, default=0, help='flip or not')
+        self.parser.add_argument('--use_flip', action='store_true', help='flip or not')
+        self.parser.add_argument('--use_topbottom_flip', action='store_true', help='flip or not')
+        self.parser.add_argument('--use_bg_augmentation', action='store_true', help='Augment the training data by replacing the background with random images')
+        self.parser.add_argument('--use_bg_augmentation_both', action='store_true', help='Augment the training data by replacing the background with random images (source & target)')
+        self.parser.add_argument('--remove_background', action='store_true', help='Remove background from images')
+        
 
         # down-sampling times
         self.parser.add_argument('--G_n_downsampling', type=int, default=2, help='down-sampling blocks for generator')
