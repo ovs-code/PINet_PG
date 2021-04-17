@@ -29,21 +29,21 @@ python test.py --dataroot ./fashion_data/ --name fashion_PInet_PG --model PInet 
 
 # Run the webapp
 First one has to create an environment with all depencies.
-We used `venv` [How to install venv](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-virtualenv) but `conda` or `pipenv` should work too. However the scripts and examples are based on `venv`.
+We used `venv` [(How to install venv)](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-virtualenv) but `conda` or `pipenv` should work too. However the scripts and examples are based on `venv` and that the environment is named *venv*.
 ```bash
 ## switch to project folder
 cd PINet_PG/
 ## create new virtual environment
-python3 -m venv [venvname]
+python3 -m venv venv
 ## activate the virtual environment
-source [venvname]/bin/activate
+source venv/bin/activate
 ## install the dependencies from requirements.txt
 pip install -r requirements.txt
 ## if there are problems with the requirements try and install missing depencies manually
 pip install -r requirements.txt --no-deps
 ```
 
-The next step is to install the node modules (Javascript dependencies). We are using `npm` for this which is shipped with `node.js` [Install node.js](https://nodejs.org/en/).
+The next step is to install the node modules (Javascript dependencies). We are using `npm` for this which is shipped with `node.js` [(Install node.js)](https://nodejs.org/en/).
 After installing `node` and `npm` one can install the node modules:
 ```bash
 ## switch to the webapp/static folder
