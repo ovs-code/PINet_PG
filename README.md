@@ -23,7 +23,7 @@ For generating the training data and for running inference two additional pretra
  - [Grapy-ML](https://github.com/Charleshhy/Grapy-ML) for human parsing can be found on their [Google Drive](https://drive.google.com/drive/folders/1eQ9IV4QmcM5dLCuVMSVE3ogVpL6qUQL5)
  - A pose estimator [based on HRNet](https://github.com/HRNet/HRNet-Human-Pose-Estimation) can be found [here](https://drive.google.com/drive/folders/1nzM_OBV9LbAEA7HClC0chEyf_7ECDXYA).
 
-Download both `CIHP_trained.pth` and `pose_hrnet_w48_256x192.pth` into `assets/pretrains/`.
+Both required models can be found in `assets.tar.gz` on [Google Drive](https://drive.google.com/drive/folders/1oOC3G_CMR8hQPDY9ob65meFww77LIdqZ)
 
 ## Training Data
 
