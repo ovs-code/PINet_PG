@@ -93,8 +93,8 @@ def make_report(checkpoint_dir):
             '--name',
             opts['name'],
             '--checkpoints_dir',
-            checkpoint_dir[: checkpoint_dir.rfind('/')]
-        ])
+            checkpoint_dir[: checkpoint_dir.rfind('/')],
+        ] + (['--remove_background'] if opts['remove_background'] == 'True' else []))
     pipeline = InferencePipeline.from_opts(pipeline_opts)
 
     with open('test_data/test.lst') as f:

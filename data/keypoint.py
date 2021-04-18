@@ -106,6 +106,10 @@ class KeyDataset(data.Dataset):
         if SPL2_img.size[0] == 256:
             SPL2_img = SPL2_img.crop(regions)
 
+        if self.opt.phase == 'train' and self.opt.brightness_augmentation:
+            brightness_factor = random.uniform(0.5, 1)
+            P1_img = transforms.functional.adjust_brightness(P1_img, brightness_factor)
+            P2_img = transforms.functional.adjust_brightness(P2_img, brightness_factor)
         if self.opt.phase == 'train' and self.opt.use_flip:
             flip_random = random.uniform(0, 1)
 
@@ -118,7 +122,7 @@ class KeyDataset(data.Dataset):
 
                 SPL1_img = SPL1_img.transpose(Image.FLIP_LEFT_RIGHT)
                 SPL2_img = SPL2_img.transpose(Image.FLIP_LEFT_RIGHT)
-                
+
         if self.opt.phase == 'train' and self.opt.use_topbottom_flip:
             flip_random = random.uniform(0, 1)
 
@@ -128,9 +132,9 @@ class KeyDataset(data.Dataset):
                 KP2_img = np.array(KP2_img[::-1, :, :])  # flip
 
                 SPL2_img = SPL2_img.transpose(Image.FLIP_TOP_BOTTOM)
-                
-        
-        
+
+
+
         SPL1_img = np.array(SPL1_img)
         SPL2_img = np.array(SPL2_img)
 

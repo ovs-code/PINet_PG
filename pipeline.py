@@ -1,5 +1,5 @@
 from __future__ import annotations
- 
+
 import math
 import os
 from typing import List
@@ -9,16 +9,17 @@ import torch
 from PIL import Image
 from torchvision import transforms, io
 from torchvision.io import video
- 
+
 from models.PINet20 import TransferModel, create_model
 import models.parsing
 from options.infer_options import InferOptions
 from tool import cords_to_map, reorder_pose
 from tool.compute_coordinates import DEFAULT_ARGS, PoseEstimator
 from util import util
- 
+from data import remove_background
+
 IMAGE_SIZE = (256, 176)
- 
+
 class InferencePipeline:
     def __init__(self, pose_estimator, pinet: TransferModel, segmentator, opt):
         """Initialize the pipeline with already loaded models."""
@@ -55,6 +56,8 @@ class InferencePipeline:
  
         # get segmentation map ...
         spl_onehot = self.segmentator.get_segmap(image).unsqueeze(0)
+        if self.opt.remove_background:
+            image = remove_background(np.array(image), 1-spl_onehot[0, 0])
  
         # run PINet
         image_norm = self.transform(image).unsqueeze(0)

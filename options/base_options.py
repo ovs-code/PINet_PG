@@ -51,7 +51,8 @@ class BaseOptions():
         self.parser.add_argument('--use_bg_augmentation', action='store_true', help='Augment the training data by replacing the background with random images')
         self.parser.add_argument('--use_bg_augmentation_both', action='store_true', help='Augment the training data by replacing the background with random images (source & target)')
         self.parser.add_argument('--remove_background', action='store_true', help='Remove background from images')
-        
+        self.parser.add_argument('--brightness_augmentation', action='store_true', help='Randomly lower brightness of input images')
+
 
         # down-sampling times
         self.parser.add_argument('--G_n_downsampling', type=int, default=2, help='down-sampling blocks for generator')
